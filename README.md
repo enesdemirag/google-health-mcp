@@ -12,6 +12,8 @@ Your account must already be linked in the Google Health mobile app. You choose 
 
 See [assistant setup](docs/clients.md) for connection commands and examples.
 
+Agents can read [llms.txt](https://googlehealth.enesdemirag.com/llms.txt) for setup instructions.
+
 ## Run your own server
 
 You need Docker Compose and a Google Cloud project with Google Health API enabled.

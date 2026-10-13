@@ -1,0 +1,63 @@
+# HealPot Google Health MCP
+
+> An unofficial, read-only MCP server for Google Health. Connect your assistant with Google sign-in or self-host the MIT-licensed source.
+
+The hosted MCP endpoint is `https://googlehealth.enesdemirag.com/mcp`. Use Streamable HTTP with per-user OAuth. Hosted users need no Google Cloud project. Their account must already be linked in the Google Health mobile app.
+
+Check [hosted availability](https://googlehealth.enesdemirag.com/config.json) before setup. The hosted service is a pilot while Google verification is pending.
+
+When the user asks to connect, preserve existing MCP connections. If `google-health` already exists, check its URL before changing it. Use the following commands only in the matching client environment.
+
+For Codex, add the server and start browser authentication:
+
+```sh
+codex mcp add google-health --url https://googlehealth.enesdemirag.com/mcp
+codex mcp login google-health
+```
+
+For Claude Code, add a personal connection:
+
+```sh
+claude mcp add --transport http --scope user google-health https://googlehealth.enesdemirag.com/mcp
+```
+
+Then open `/mcp` in Claude Code and authenticate `google-health`.
+
+For Cursor, merge this entry into `~/.cursor/mcp.json`. Preserve other entries, then finish authentication in Cursor's MCP settings.
+
+```json
+{
+  "mcpServers": {
+    "google-health": {
+      "url": "https://googlehealth.enesdemirag.com/mcp"
+    }
+  }
+}
+```
+
+For Grok, open https://grok.com/connectors, choose New Connector, then Custom. Enter the hosted MCP endpoint and authenticate. For other assistants, use their custom remote MCP connector with Streamable HTTP and OAuth support. If you cannot edit the client's configuration, give these manual steps. A chat prompt alone does not establish a connection.
+
+Let the user complete consent and Google sign-in in the browser. Never ask for passwords, Google tokens or Cloud credentials. Each person authorizes their own account. An unauthenticated MCP request can return HTTP 401; use the client's OAuth flow.
+
+After authentication, call `get_connection_status` and `list_health_metrics`. Report the connection status and granted categories. Configuration alone does not prove a connected account, and granted permissions do not prove measurements exist. Explain missing permissions or account-linking errors. Read health measurements only when the user requests them.
+
+Use `get_sleep_sessions` for sleep, `get_workouts` for exercise, `get_metric_history` for one metric, `get_health_overview` for several metrics, or `get_daily_health_context` for a day against the user's previous recorded days. Discover current schemas through MCP `tools/list` before calling tools.
+
+Date ranges include `start_date` and exclude `end_date`, with a maximum of 90 days. Use the user's IANA time zone. Keep missing readings and provider errors distinct from zero. Personal baselines are not clinical reference ranges. Your assistant handles scheduling and analysis.
+
+## Documentation
+
+- [Assistant setup](https://raw.githubusercontent.com/enesdemirag/google-health-mcp/main/docs/clients.md): Client instructions and authentication.
+- [Tool reference](https://raw.githubusercontent.com/enesdemirag/google-health-mcp/main/docs/tools.md): Arguments, units, statuses and date rules.
+- [Tool schemas](https://raw.githubusercontent.com/enesdemirag/google-health-mcp/main/docs/tools.json): Generated JSON schemas.
+- [Scheduled reports](https://raw.githubusercontent.com/enesdemirag/google-health-mcp/main/docs/scheduled-reports.md): Morning sleep and evening goal review prompts.
+- [Data handling](https://raw.githubusercontent.com/enesdemirag/google-health-mcp/main/docs/privacy.md): Credential storage, assistant access and disconnect instructions.
+
+## Optional
+
+- [Self-hosting](https://raw.githubusercontent.com/enesdemirag/google-health-mcp/main/docs/self-hosting.md): Docker setup with your own Google Cloud project and OAuth client.
+- [Source](https://github.com/enesdemirag/google-health-mcp): Public repository and MIT license.
+- [Codex MCP](https://learn.chatgpt.com/docs/extend/mcp?surface=cli): Official Codex setup.
+- [Claude Code MCP](https://code.claude.com/docs/en/mcp): Official Claude Code setup.
+- [Cursor MCP](https://cursor.com/docs/mcp): Official Cursor configuration.
+- [Grok connectors](https://docs.x.ai/grok/connectors): Official custom connector instructions.
