@@ -22,6 +22,9 @@ class HealthGoogleProvider(GoogleProvider):
         response = await super()._show_consent_page(request)
         marker = b'<form id="consentForm"'
         if isinstance(response, HTMLResponse) and marker in response.body:
+            # Keep the browser's Origin on the form POST without sending the
+            # consent transaction URL to Google or other external sites.
+            response.headers["Referrer-Policy"] = "same-origin"
             policy = (
                 f'<p><a href="{escape(self.privacy_policy_url, quote=True)}" '
                 'target="_blank" rel="noopener noreferrer">Operator privacy policy and disconnect</a></p>'

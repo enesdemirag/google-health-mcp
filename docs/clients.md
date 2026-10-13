@@ -25,6 +25,22 @@ claude mcp add --transport http google-health https://YOUR_MCP_DOMAIN/mcp
 
 Authenticate through `/mcp` in Claude Code. The server must allow the client's callback URL. See [Claude Code MCP setup](https://code.claude.com/docs/en/mcp).
 
+## Cursor
+
+Merge this entry into your personal `~/.cursor/mcp.json`, then authenticate in Cursor's MCP settings.
+
+```json
+{
+  "mcpServers": {
+    "google-health": {
+      "url": "https://YOUR_MCP_DOMAIN/mcp"
+    }
+  }
+}
+```
+
+Cursor uses `https://www.cursor.com/agents/mcp/oauth/callback` for web agents and `http://localhost:8787/callback` for desktop. The default callback list allows both. Custom lists must include them. These are assistant callbacks; Google's OAuth client still uses the server's `/auth/callback`. See [Cursor MCP setup](https://cursor.com/docs/mcp).
+
 ## Grok
 
 Open [Grok connectors](https://grok.com/connectors), choose New Connector, then Custom. Enter the public MCP URL and finish authentication. See [Grok custom connectors](https://docs.x.ai/grok/connectors).

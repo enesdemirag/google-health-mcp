@@ -100,9 +100,22 @@ async def test_health_disclosure_precedes_consent_and_preserves_csrf(oauth):
     assert int(page.headers["content-length"]) == len(page.content)
     assert 'http-equiv="Content-Security-Policy"' in page.text
     assert page.headers["x-frame-options"] == "DENY"
+    assert page.headers["referrer-policy"] == "same-origin"
     await oauth.approve(flow)
     await oauth.callback(flow)
     assert (await oauth.exchange(flow)).status_code == 200
+
+
+@pytest.mark.parametrize("origin", ["null", "https://attacker.example"])
+async def test_consent_rejects_untrusted_origins_with_valid_csrf(oauth, origin):
+    flow = await oauth.start()
+    response = await oauth.client.post(
+        "/consent",
+        headers={"Origin": origin},
+        data={"txn_id": flow["transaction"], "csrf_token": flow["csrf"], "action": "approve"},
+    )
+    assert response.status_code == 403
+    assert response.text == "Forbidden Origin"
 
 
 async def test_registration_rejects_unapproved_redirects_and_write_scopes(oauth):
@@ -117,6 +130,43 @@ async def test_registration_rejects_unapproved_redirects_and_write_scopes(oauth)
             "/register", json={"client_name": "Unapproved", "token_endpoint_auth_method": "none", **body}
         )
         assert response.status_code == 400
+
+
+@pytest.mark.parametrize(
+    "redirect_uri",
+    [
+        "https://www.cursor.com/agents/mcp/oauth/callback",
+        "http://localhost:8787/callback",
+    ],
+)
+async def test_cursor_callback_completes_oauth(oauth, redirect_uri):
+    flow = await oauth.start(redirect_uri=redirect_uri)
+    await oauth.approve(flow)
+    await oauth.callback(flow)
+    assert (await oauth.exchange(flow)).status_code == 200
+
+
+@pytest.mark.parametrize(
+    "redirect_uri",
+    [
+        "https://www.cursor.com/other-callback",
+        "https://www.cursor.com.attacker.example/agents/mcp/oauth/callback",
+        "http://www.cursor.com/agents/mcp/oauth/callback",
+        "https://www.cursor.com/agents/mcp/oauth/callback/extra",
+    ],
+)
+async def test_cursor_callback_allowlist_rejects_other_urls(oauth, redirect_uri):
+    response = await oauth.client.post(
+        "/register",
+        json={
+            "client_name": "Unapproved callback",
+            "redirect_uris": [redirect_uri],
+            "token_endpoint_auth_method": "none",
+            "scope": "openid",
+        },
+    )
+    assert response.status_code == 400
+    assert response.json()["error"] == "invalid_redirect_uri"
 
 
 async def test_invalid_and_raw_google_tokens_are_not_mcp_credentials(oauth):

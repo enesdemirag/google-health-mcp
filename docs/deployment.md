@@ -46,7 +46,7 @@ Health requests always use the authenticated user's `users/me` path. `get_connec
 | `GOOGLE_HEALTH_MCP_DATA_DIR` | OAuth storage directory, `/data/oauth` in Docker |
 | `GOOGLE_HEALTH_MCP_ALLOWED_CLIENT_REDIRECT_URIS` | JSON list of allowed assistant callback patterns |
 
-HTTP is allowed only for loopback development. The default callback list permits loopback clients and HTTPS callbacks on `claude.ai`, `chatgpt.com`, `grok.com` and `muse.ai`. Check each client's actual callback and narrow the list for your deployment. Add other fixed hosts as needed. Universal host wildcards are rejected.
+HTTP is allowed only for loopback development. The default list permits loopback clients, Cursor's web callback at `https://www.cursor.com/agents/mcp/oauth/callback` and HTTPS callbacks on `claude.ai`, `chatgpt.com`, `grok.com` and `muse.ai`. If you set a custom list, include the callbacks your clients use. Universal host wildcards are rejected.
 
 Connection consent binds the Google callback to the approving browser. Host and Origin checks protect HTTP requests. MCP tokens are bound to this server's resource audience. The proxy does not forward MCP's `resource` parameter to Google.
 

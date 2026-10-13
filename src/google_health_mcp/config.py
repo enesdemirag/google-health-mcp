@@ -28,6 +28,7 @@ class Settings(BaseSettings):
         default_factory=lambda: [
             "http://127.0.0.1:*/*",
             "http://localhost:*/*",
+            "https://www.cursor.com/agents/mcp/oauth/callback",
             "https://claude.ai/*",
             "https://chatgpt.com/*",
             "https://grok.com/*",

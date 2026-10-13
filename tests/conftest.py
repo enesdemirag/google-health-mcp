@@ -51,9 +51,9 @@ class OAuthHarness:
     def __init__(self, settings, client, server, app, calls):
         self.settings, self.client, self.server, self.app, self.calls = settings, client, server, app, calls
 
-    async def start(self, person="a", scopes=None):
+    async def start(self, person="a", scopes=None, redirect_uri="http://localhost:48100/callback"):
         scopes = scopes if scopes is not None else ["openid", *HEALTH_SCOPES]
-        redirect = "http://localhost:48100/callback"
+        redirect = redirect_uri
         registration = await self.client.post(
             "/register",
             json={
@@ -100,7 +100,9 @@ class OAuthHarness:
 
     async def approve(self, flow):
         approved = await self.client.post(
-            "/consent", data={"txn_id": flow["transaction"], "csrf_token": flow["csrf"], "action": "approve"}
+            "/consent",
+            headers={"Origin": self.settings.public_base_url},
+            data={"txn_id": flow["transaction"], "csrf_token": flow["csrf"], "action": "approve"},
         )
         assert approved.status_code in {302, 303}, approved.text
         query = parse_qs(urlsplit(approved.headers["location"]).query)
@@ -117,7 +119,14 @@ class OAuthHarness:
             "/auth/callback", params={"state": flow["google_state"], "code": f"code-{flow['person']}"}
         )
         assert callback.status_code == 302, callback.text
-        query = parse_qs(urlsplit(callback.headers["location"]).query)
+        target = urlsplit(callback.headers["location"])
+        expected = urlsplit(flow["redirect"])
+        assert (target.scheme, target.netloc, target.path) == (
+            expected.scheme,
+            expected.netloc,
+            expected.path,
+        )
+        query = parse_qs(target.query)
         assert query["state"] == [f"assistant-state-{flow['person']}"]
         assert "google-person" not in callback.headers["location"]
         flow["code"] = query["code"][0]

@@ -1,16 +1,17 @@
 # Verification
 
-The checks below passed on 2026-10-13. They use synthetic Google responses and do not prove a live Google account connection, external assistant compatibility or Google approval.
+The tests use synthetic Google responses and do not prove a live Google account connection, completed assistant sign-in or Google approval.
 
 ## Automated checks
 
-All 44 tests passed, along with lint, formatting, compilation and `git diff --check`. Run the [development commands](../README.md#development) to repeat them.
+On 2026-10-14, all 52 tests passed, along with lint, formatting, compilation and `git diff --check`. Run the [development commands](../README.md#development) to repeat them.
 
 The tests cover:
 
 - OAuth discovery, client registration, anonymous request rejection and S256 PKCE for both OAuth flows.
-- Consent disclosure, CSRF protection, browser binding and callback or code replay rejection.
+- Consent disclosure, same-origin form policy, rejection of null and foreign origins, CSRF protection, browser binding and callback or code replay rejection.
 - Rejection of unapproved callbacks, write scopes, raw Google tokens and tokens for another client audience.
+- Cursor web and desktop OAuth flows, with rejection of other paths, lookalike hosts and non-loopback HTTP callbacks.
 - Encrypted storage across server instances, refresh token rotation and concurrent calls from two separate users.
 - Partial consent, missing values, units, sleep and workout parsing, date validation and query limits.
 - Pagination, 14-day query chunks, repeated cursors, bounded retries and errors instead of partial success.
@@ -20,6 +21,8 @@ The tests cover:
 Production code has no synthetic-data mode. The exported catalog has seven tools with input and output schemas.
 
 ## Docker and website checks
+
+These checks were recorded on 2026-10-13.
 
 ```sh
 docker build -t google-health-mcp:local .
