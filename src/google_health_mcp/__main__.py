@@ -32,7 +32,7 @@ def main():
         print(
             json.dumps(
                 {
-                    "name": "Google Health MCP (Unofficial)",
+                    "name": "HealPot — Google Health MCP (Unofficial)",
                     "transport": "streamable-http",
                     "mcp_url": f"{settings.public_base_url}/mcp",
                     "google_redirect_uri": settings.google_redirect_uri,
