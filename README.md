@@ -6,7 +6,7 @@ This project is unofficial and has no affiliation to Google. It uses the [MIT li
 
 ## Connect your account
 
-Open the [website](https://enesdemirag.github.io/google-health-mcp/) to check hosted availability and copy your assistant's setup prompt. Sign in with Google. No Cloud project is needed.
+Open the [website](https://googlehealth.enesdemirag.com/) to check hosted availability and copy your assistant's setup prompt. Sign in with Google. No Cloud project is needed.
 
 Your account must already be linked in the Google Health mobile app. You choose which health categories to share.
 

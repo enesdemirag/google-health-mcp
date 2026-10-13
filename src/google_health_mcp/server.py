@@ -122,10 +122,10 @@ def create_server(settings: Settings, *, google_client: httpx.AsyncClient | None
     mcp = FastMCP(
         name="HealPot — Google Health MCP (Unofficial)",
         version="0.1.0",
-        website_url="https://enesdemirag.github.io/google-health-mcp/",
+        website_url="https://googlehealth.enesdemirag.com/",
         icons=[
             Icon(
-                src="https://enesdemirag.github.io/google-health-mcp/assets/healpot-logo.png",
+                src="https://googlehealth.enesdemirag.com/assets/healpot-logo.png",
                 mimeType="image/png",
                 sizes=["1254x1254"],
             )

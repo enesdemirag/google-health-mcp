@@ -2,7 +2,7 @@
 
 Use the operator's public MCP URL and sign in with your own Google account. A cloud assistant cannot reach a server at your computer's loopback address.
 
-The [website](https://enesdemirag.github.io/google-health-mcp/) has setup prompts for the hosted server or your own URL.
+The [website](https://googlehealth.enesdemirag.com/) has setup prompts for the hosted server or your own URL.
 
 ## Codex
 
