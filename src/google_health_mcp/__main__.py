@@ -9,9 +9,7 @@ from google_health_mcp.server import create_app, create_server
 
 
 def main():
-    parser = argparse.ArgumentParser(
-        description="Run the standalone, multi-user Google Health MCP MCP server."
-    )
+    parser = argparse.ArgumentParser(description="Run the unofficial, read-only Google Health MCP server.")
     parser.add_argument(
         "--describe",
         action="store_true",
@@ -34,7 +32,7 @@ def main():
         print(
             json.dumps(
                 {
-                    "name": "Google Health MCP",
+                    "name": "Google Health MCP (Unofficial)",
                     "transport": "streamable-http",
                     "mcp_url": f"{settings.public_base_url}/mcp",
                     "google_redirect_uri": settings.google_redirect_uri,

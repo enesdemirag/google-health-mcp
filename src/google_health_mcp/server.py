@@ -10,6 +10,7 @@ from fastmcp import FastMCP
 from fastmcp.exceptions import ToolError
 from fastmcp.server.auth import AccessToken
 from fastmcp.server.dependencies import get_access_token
+from mcp.types import Icon
 from pydantic import Field, ValidationError
 from starlette.requests import Request
 from starlette.responses import JSONResponse
@@ -119,8 +120,16 @@ def create_server(settings: Settings, *, google_client: httpx.AsyncClient | None
                 health = None
 
     mcp = FastMCP(
-        name="Google Health MCP",
+        name="Google Health MCP (Unofficial)",
         version="0.1.0",
+        website_url="https://enesdemirag.github.io/google-health-mcp/",
+        icons=[
+            Icon(
+                src="https://enesdemirag.github.io/google-health-mcp/assets/healpot-logo.png",
+                mimeType="image/png",
+                sizes=["1254x1254"],
+            )
+        ],
         instructions=INSTRUCTIONS,
         auth=auth,
         lifespan=lifespan,

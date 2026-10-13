@@ -1,4 +1,4 @@
-# Google Health MCP Server
+# Google Health MCP (Unofficial)
 
 An **unofficial, open-source, read-only** MCP server for Google Health. Connect your own health data to an MCP-compatible AI assistant through Google sign-in.
 

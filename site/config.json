@@ -1,5 +1,5 @@
 {
   "hostedMcpUrl": "https://googlehealth.enesdemirag.com/mcp",
-  "hostedStatus": "pending",
-  "hostedMessage": "Hosted access is being prepared. Self-hosting is available now."
+  "hostedStatus": "pilot",
+  "hostedMessage": "Hosted server online. Google verification is not complete; the current OAuth limit is 100 users."
 }

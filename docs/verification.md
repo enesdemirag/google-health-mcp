@@ -54,7 +54,7 @@ The temporary container was stopped and removed. The check did not contact Googl
 
 The Compose configuration resolved successfully. Normal operation starts only `mcp`; the optional HTTPS overlay adds `caddy`. The `setup` profile provides a separate configuration container. Its documented command was exercised: it created a mode-0600 `.env` with new keys and no Google credentials, and exited. Neither deployment configuration contains or depends on other application services. Real Web OAuth credentials are still required before operation.
 
-The website was checked in a browser at desktop and 390-pixel mobile widths, with no horizontal overflow. Self-host selection generated the expected Codex prompt. Clipboard denial revealed and selected a manual-copy fallback; automatic clipboard access was not available in that browser session. The hosted endpoint stays marked pending until deployment/account access is verified.
+The website was checked in a browser at desktop and 390-pixel mobile widths, with no horizontal overflow. Self-host selection generated the expected Codex prompt. Clipboard denial revealed and selected a manual-copy fallback; automatic clipboard access was not available in that browser session. The redesigned page loads the approved HealPot logo and locally hosted Instrument Serif/DM Mono fonts. Hosted access is labeled as a pilot while Google verification remains incomplete; process readiness does not establish a real Health account connection.
 
 The exported tool catalog contains seven tools and machine-readable input/output schemas. Tool export is a schema artifact, not a completed account connection.
 
