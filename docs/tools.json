@@ -1,0 +1,1702 @@
+{
+  "tools": [
+    {
+      "name": "get_connection_status",
+      "title": "Get Connection Status",
+      "description": "Check whether the signed-in account is linked to Google Health and report granted read permissions.\n\nGoogle sign-in alone does not prove health access. Use this before interpreting absent records.\nNo passwords, provider tokens, email addresses or account identifiers are returned.",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {},
+        "type": "object"
+      },
+      "outputSchema": {
+        "properties": {
+          "provider": {
+            "const": "google_health",
+            "default": "google_health",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "connected",
+              "missing_permission",
+              "account_not_linked",
+              "unavailable"
+            ],
+            "type": "string"
+          },
+          "health_account_linked": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "granted_health_scopes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "checked_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "status",
+          "granted_health_scopes",
+          "checked_at",
+          "message"
+        ],
+        "type": "object"
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true
+      },
+      "_meta": {
+        "fastmcp": {
+          "tags": []
+        }
+      }
+    },
+    {
+      "name": "list_health_metrics",
+      "title": "List Health Metrics",
+      "description": "List the 17 supported metric IDs, units, aggregation methods and this user's granted permissions.\n\nThis is a capability catalog, not proof that a device recorded data. Use dedicated tools for sleep stages\nand workouts. Additional Google Health types are not implemented.",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {},
+        "type": "object"
+      },
+      "outputSchema": {
+        "properties": {
+          "provider": {
+            "const": "google_health",
+            "default": "google_health",
+            "type": "string"
+          },
+          "metrics": {
+            "items": {
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "label": {
+                  "type": "string"
+                },
+                "unit": {
+                  "type": "string"
+                },
+                "aggregation": {
+                  "type": "string"
+                },
+                "data_type": {
+                  "type": "string"
+                },
+                "required_scope": {
+                  "type": "string"
+                },
+                "permission_granted": {
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "id",
+                "label",
+                "unit",
+                "aggregation",
+                "data_type",
+                "required_scope",
+                "permission_granted"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "notes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "metrics",
+          "notes"
+        ],
+        "type": "object"
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true
+      },
+      "_meta": {
+        "fastmcp": {
+          "tags": []
+        }
+      }
+    },
+    {
+      "name": "get_metric_history",
+      "title": "Get Metric History",
+      "description": "Fetch a daily metric series directly from Google Health, with units, sources, missing dates and statistics.\n\nDates use an inclusive start and exclusive end, with at most 90 days. Missing days stay unknown.\nTotals are returned only for daily-total metrics. Sleep duration uses the longest recorded session per day.\nProvider errors do not produce fabricated or partially fetched values.",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "metric": {
+            "description": "A metric ID returned by list_health_metrics, such as steps, hrv, weight, or sleep_duration.",
+            "type": "string"
+          },
+          "start_date": {
+            "description": "Inclusive start date in YYYY-MM-DD format.",
+            "format": "date",
+            "type": "string"
+          },
+          "end_date": {
+            "description": "Exclusive end date in YYYY-MM-DD format. Maximum range: 90 days.",
+            "format": "date",
+            "type": "string"
+          },
+          "timezone": {
+            "default": "UTC",
+            "description": "IANA time zone for physical timestamp conversion, such as Europe/Istanbul or UTC.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "metric",
+          "start_date",
+          "end_date"
+        ],
+        "type": "object"
+      },
+      "outputSchema": {
+        "properties": {
+          "provider": {
+            "const": "google_health",
+            "default": "google_health",
+            "type": "string"
+          },
+          "metric": {
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "label": {
+                "type": "string"
+              },
+              "unit": {
+                "type": "string"
+              },
+              "aggregation": {
+                "type": "string"
+              },
+              "data_type": {
+                "type": "string"
+              },
+              "required_scope": {
+                "type": "string"
+              },
+              "permission_granted": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "id",
+              "label",
+              "unit",
+              "aggregation",
+              "data_type",
+              "required_scope",
+              "permission_granted"
+            ],
+            "type": "object"
+          },
+          "query": {
+            "properties": {
+              "start_date": {
+                "format": "date",
+                "type": "string"
+              },
+              "end_date": {
+                "format": "date",
+                "type": "string"
+              },
+              "timezone": {
+                "default": "UTC",
+                "type": "string"
+              }
+            },
+            "required": [
+              "start_date",
+              "end_date"
+            ],
+            "type": "object"
+          },
+          "status": {
+            "enum": [
+              "available",
+              "no_data",
+              "missing_permission",
+              "unavailable",
+              "provider_error",
+              "account_not_linked"
+            ],
+            "type": "string"
+          },
+          "fetched_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "samples": {
+            "items": {
+              "properties": {
+                "date": {
+                  "format": "date",
+                  "type": "string"
+                },
+                "value": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "date",
+                "value"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "missing_dates": {
+            "items": {
+              "format": "date",
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "statistics": {
+            "properties": {
+              "recorded_days": {
+                "type": "integer"
+              },
+              "requested_days": {
+                "type": "integer"
+              },
+              "latest_value": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null
+              },
+              "latest_date": {
+                "anyOf": [
+                  {
+                    "format": "date",
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null
+              },
+              "average": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null
+              },
+              "minimum": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null
+              },
+              "maximum": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null
+              },
+              "total": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null
+              }
+            },
+            "required": [
+              "recorded_days",
+              "requested_days"
+            ],
+            "type": "object"
+          },
+          "sources": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "notes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "metric",
+          "query",
+          "status",
+          "fetched_at",
+          "statistics"
+        ],
+        "type": "object"
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true
+      },
+      "_meta": {
+        "fastmcp": {
+          "tags": []
+        }
+      }
+    },
+    {
+      "name": "get_sleep_sessions",
+      "title": "Get Sleep Sessions",
+      "description": "Read recorded sleep sessions and available stages for the signed-in user.\n\nGoogle filters sessions by their recorded civil end date. Times retain their UTC offsets.\nAn unknown asleep duration stays null; time in bed is not substituted. No proprietary sleep score is inferred.",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "start_date": {
+            "description": "Inclusive start date in YYYY-MM-DD format.",
+            "format": "date",
+            "type": "string"
+          },
+          "end_date": {
+            "description": "Exclusive end date in YYYY-MM-DD format. Maximum range: 90 days.",
+            "format": "date",
+            "type": "string"
+          },
+          "timezone": {
+            "default": "UTC",
+            "description": "IANA time zone for physical timestamp conversion, such as Europe/Istanbul or UTC.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "start_date",
+          "end_date"
+        ],
+        "type": "object"
+      },
+      "outputSchema": {
+        "properties": {
+          "provider": {
+            "const": "google_health",
+            "default": "google_health",
+            "type": "string"
+          },
+          "query": {
+            "properties": {
+              "start_date": {
+                "format": "date",
+                "type": "string"
+              },
+              "end_date": {
+                "format": "date",
+                "type": "string"
+              },
+              "timezone": {
+                "default": "UTC",
+                "type": "string"
+              }
+            },
+            "required": [
+              "start_date",
+              "end_date"
+            ],
+            "type": "object"
+          },
+          "status": {
+            "enum": [
+              "available",
+              "no_data",
+              "missing_permission",
+              "unavailable",
+              "provider_error",
+              "account_not_linked"
+            ],
+            "type": "string"
+          },
+          "fetched_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "sessions": {
+            "items": {
+              "properties": {
+                "id": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "default": null
+                },
+                "start": {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                "end": {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                "total_sleep_minutes": {
+                  "anyOf": [
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "default": null
+                },
+                "stages": {
+                  "items": {
+                    "properties": {
+                      "stage": {
+                        "type": "string"
+                      },
+                      "start": {
+                        "format": "date-time",
+                        "type": "string"
+                      },
+                      "end": {
+                        "format": "date-time",
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "stage",
+                      "start",
+                      "end"
+                    ],
+                    "type": "object"
+                  },
+                  "type": "array"
+                },
+                "source": {
+                  "anyOf": [
+                    {
+                      "additionalProperties": true,
+                      "type": "object"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "default": null
+                }
+              },
+              "required": [
+                "start",
+                "end"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "notes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "query",
+          "status",
+          "fetched_at"
+        ],
+        "type": "object"
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true
+      },
+      "_meta": {
+        "fastmcp": {
+          "tags": []
+        }
+      }
+    },
+    {
+      "name": "get_workouts",
+      "title": "Get Workouts",
+      "description": "Read recorded workouts, activity types, durations and optional calorie, distance and heart-rate values.\n\nGoogle filters sessions by their recorded civil start date. Optional measurements stay null when absent.\nCalorie values are recorded workout estimates, not a prescription for food intake.",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "start_date": {
+            "description": "Inclusive start date in YYYY-MM-DD format.",
+            "format": "date",
+            "type": "string"
+          },
+          "end_date": {
+            "description": "Exclusive end date in YYYY-MM-DD format. Maximum range: 90 days.",
+            "format": "date",
+            "type": "string"
+          },
+          "timezone": {
+            "default": "UTC",
+            "description": "IANA time zone for physical timestamp conversion, such as Europe/Istanbul or UTC.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "start_date",
+          "end_date"
+        ],
+        "type": "object"
+      },
+      "outputSchema": {
+        "properties": {
+          "provider": {
+            "const": "google_health",
+            "default": "google_health",
+            "type": "string"
+          },
+          "query": {
+            "properties": {
+              "start_date": {
+                "format": "date",
+                "type": "string"
+              },
+              "end_date": {
+                "format": "date",
+                "type": "string"
+              },
+              "timezone": {
+                "default": "UTC",
+                "type": "string"
+              }
+            },
+            "required": [
+              "start_date",
+              "end_date"
+            ],
+            "type": "object"
+          },
+          "status": {
+            "enum": [
+              "available",
+              "no_data",
+              "missing_permission",
+              "unavailable",
+              "provider_error",
+              "account_not_linked"
+            ],
+            "type": "string"
+          },
+          "fetched_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "workouts": {
+            "items": {
+              "properties": {
+                "id": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "default": null
+                },
+                "title": {
+                  "type": "string"
+                },
+                "activity_type": {
+                  "type": "string"
+                },
+                "start": {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                "end": {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                "duration_minutes": {
+                  "type": "number"
+                },
+                "calories_kcal": {
+                  "anyOf": [
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "default": null
+                },
+                "distance_km": {
+                  "anyOf": [
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "default": null
+                },
+                "average_heart_rate_bpm": {
+                  "anyOf": [
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "default": null
+                },
+                "source": {
+                  "anyOf": [
+                    {
+                      "additionalProperties": true,
+                      "type": "object"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "default": null
+                }
+              },
+              "required": [
+                "title",
+                "activity_type",
+                "start",
+                "end",
+                "duration_minutes"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "notes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "query",
+          "status",
+          "fetched_at"
+        ],
+        "type": "object"
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true
+      },
+      "_meta": {
+        "fastmcp": {
+          "tags": []
+        }
+      }
+    },
+    {
+      "name": "get_health_overview",
+      "title": "Get Health Overview",
+      "description": "Fetch a bounded overview of relevant metrics, with separate permission and data status for each one.\n\nSupply only metrics needed for the user's question. A failed metric does not hide successful metrics.\nThis returns recorded data and arithmetic summaries; the assistant supplies the explanation.",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "start_date": {
+            "description": "Inclusive start date in YYYY-MM-DD format.",
+            "format": "date",
+            "type": "string"
+          },
+          "end_date": {
+            "description": "Exclusive end date in YYYY-MM-DD format. Maximum range: 90 days.",
+            "format": "date",
+            "type": "string"
+          },
+          "timezone": {
+            "default": "UTC",
+            "description": "IANA time zone for physical timestamp conversion, such as Europe/Istanbul or UTC.",
+            "type": "string"
+          },
+          "metrics": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "maxItems": 17,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Optional unique metric IDs, at most 17. Defaults to steps, calories, sleep_duration, resting_heart_rate and hrv."
+          }
+        },
+        "required": [
+          "start_date",
+          "end_date"
+        ],
+        "type": "object"
+      },
+      "outputSchema": {
+        "properties": {
+          "provider": {
+            "const": "google_health",
+            "default": "google_health",
+            "type": "string"
+          },
+          "query": {
+            "properties": {
+              "start_date": {
+                "format": "date",
+                "type": "string"
+              },
+              "end_date": {
+                "format": "date",
+                "type": "string"
+              },
+              "timezone": {
+                "default": "UTC",
+                "type": "string"
+              }
+            },
+            "required": [
+              "start_date",
+              "end_date"
+            ],
+            "type": "object"
+          },
+          "fetched_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "metrics": {
+            "items": {
+              "properties": {
+                "provider": {
+                  "const": "google_health",
+                  "default": "google_health",
+                  "type": "string"
+                },
+                "metric": {
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "label": {
+                      "type": "string"
+                    },
+                    "unit": {
+                      "type": "string"
+                    },
+                    "aggregation": {
+                      "type": "string"
+                    },
+                    "data_type": {
+                      "type": "string"
+                    },
+                    "required_scope": {
+                      "type": "string"
+                    },
+                    "permission_granted": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "label",
+                    "unit",
+                    "aggregation",
+                    "data_type",
+                    "required_scope",
+                    "permission_granted"
+                  ],
+                  "type": "object"
+                },
+                "query": {
+                  "properties": {
+                    "start_date": {
+                      "format": "date",
+                      "type": "string"
+                    },
+                    "end_date": {
+                      "format": "date",
+                      "type": "string"
+                    },
+                    "timezone": {
+                      "default": "UTC",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "start_date",
+                    "end_date"
+                  ],
+                  "type": "object"
+                },
+                "status": {
+                  "enum": [
+                    "available",
+                    "no_data",
+                    "missing_permission",
+                    "unavailable",
+                    "provider_error",
+                    "account_not_linked"
+                  ],
+                  "type": "string"
+                },
+                "fetched_at": {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                "samples": {
+                  "items": {
+                    "properties": {
+                      "date": {
+                        "format": "date",
+                        "type": "string"
+                      },
+                      "value": {
+                        "type": "number"
+                      }
+                    },
+                    "required": [
+                      "date",
+                      "value"
+                    ],
+                    "type": "object"
+                  },
+                  "type": "array"
+                },
+                "missing_dates": {
+                  "items": {
+                    "format": "date",
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                "statistics": {
+                  "properties": {
+                    "recorded_days": {
+                      "type": "integer"
+                    },
+                    "requested_days": {
+                      "type": "integer"
+                    },
+                    "latest_value": {
+                      "anyOf": [
+                        {
+                          "type": "number"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "default": null
+                    },
+                    "latest_date": {
+                      "anyOf": [
+                        {
+                          "format": "date",
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "default": null
+                    },
+                    "average": {
+                      "anyOf": [
+                        {
+                          "type": "number"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "default": null
+                    },
+                    "minimum": {
+                      "anyOf": [
+                        {
+                          "type": "number"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "default": null
+                    },
+                    "maximum": {
+                      "anyOf": [
+                        {
+                          "type": "number"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "default": null
+                    },
+                    "total": {
+                      "anyOf": [
+                        {
+                          "type": "number"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "default": null
+                    }
+                  },
+                  "required": [
+                    "recorded_days",
+                    "requested_days"
+                  ],
+                  "type": "object"
+                },
+                "sources": {
+                  "items": {
+                    "additionalProperties": true,
+                    "type": "object"
+                  },
+                  "type": "array"
+                },
+                "notes": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                }
+              },
+              "required": [
+                "metric",
+                "query",
+                "status",
+                "fetched_at",
+                "statistics"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "notes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "query",
+          "fetched_at",
+          "metrics",
+          "notes"
+        ],
+        "type": "object"
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true
+      },
+      "_meta": {
+        "fastmcp": {
+          "tags": []
+        }
+      }
+    },
+    {
+      "name": "get_daily_health_context",
+      "title": "Get Daily Health Context",
+      "description": "Read a day's metrics alongside a personal baseline for scheduled morning or evening insight reports.\n\nReturns the day's data, preceding calendar-day history, coverage and arithmetic changes for each metric.\nA personal baseline is not a clinical reference interval. No clinical normal/abnormal labels are inferred.\nCurrent-day results may be incomplete, and even older data can arrive late from a device.\nThe assistant owns scheduling, user goals, reference research and the final report; this server remains read-only.",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "day": {
+            "description": "Local report day in YYYY-MM-DD format. Sleep is associated with its end date. Future days are rejected.",
+            "format": "date",
+            "type": "string"
+          },
+          "timezone": {
+            "default": "UTC",
+            "description": "IANA time zone for physical timestamp conversion, such as Europe/Istanbul or UTC.",
+            "type": "string"
+          },
+          "baseline_days": {
+            "default": 7,
+            "description": "Number of preceding calendar days to read for a personal baseline. At least three recorded days are needed for a comparison.",
+            "maximum": 30,
+            "minimum": 3,
+            "type": "integer"
+          },
+          "metrics": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "maxItems": 17,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Optional 1 to 17 unique metric IDs. Defaults to steps, calories, sleep_duration, resting_heart_rate and hrv."
+          }
+        },
+        "required": [
+          "day"
+        ],
+        "type": "object"
+      },
+      "outputSchema": {
+        "properties": {
+          "provider": {
+            "const": "google_health",
+            "default": "google_health",
+            "type": "string"
+          },
+          "date": {
+            "format": "date",
+            "type": "string"
+          },
+          "timezone": {
+            "type": "string"
+          },
+          "fetched_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "calendar_day_finished": {
+            "type": "boolean"
+          },
+          "provider_coverage_complete": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "metrics": {
+            "items": {
+              "properties": {
+                "day": {
+                  "properties": {
+                    "provider": {
+                      "const": "google_health",
+                      "default": "google_health",
+                      "type": "string"
+                    },
+                    "metric": {
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "label": {
+                          "type": "string"
+                        },
+                        "unit": {
+                          "type": "string"
+                        },
+                        "aggregation": {
+                          "type": "string"
+                        },
+                        "data_type": {
+                          "type": "string"
+                        },
+                        "required_scope": {
+                          "type": "string"
+                        },
+                        "permission_granted": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "label",
+                        "unit",
+                        "aggregation",
+                        "data_type",
+                        "required_scope",
+                        "permission_granted"
+                      ],
+                      "type": "object"
+                    },
+                    "query": {
+                      "properties": {
+                        "start_date": {
+                          "format": "date",
+                          "type": "string"
+                        },
+                        "end_date": {
+                          "format": "date",
+                          "type": "string"
+                        },
+                        "timezone": {
+                          "default": "UTC",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "start_date",
+                        "end_date"
+                      ],
+                      "type": "object"
+                    },
+                    "status": {
+                      "enum": [
+                        "available",
+                        "no_data",
+                        "missing_permission",
+                        "unavailable",
+                        "provider_error",
+                        "account_not_linked"
+                      ],
+                      "type": "string"
+                    },
+                    "fetched_at": {
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    "samples": {
+                      "items": {
+                        "properties": {
+                          "date": {
+                            "format": "date",
+                            "type": "string"
+                          },
+                          "value": {
+                            "type": "number"
+                          }
+                        },
+                        "required": [
+                          "date",
+                          "value"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    },
+                    "missing_dates": {
+                      "items": {
+                        "format": "date",
+                        "type": "string"
+                      },
+                      "type": "array"
+                    },
+                    "statistics": {
+                      "properties": {
+                        "recorded_days": {
+                          "type": "integer"
+                        },
+                        "requested_days": {
+                          "type": "integer"
+                        },
+                        "latest_value": {
+                          "anyOf": [
+                            {
+                              "type": "number"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ],
+                          "default": null
+                        },
+                        "latest_date": {
+                          "anyOf": [
+                            {
+                              "format": "date",
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ],
+                          "default": null
+                        },
+                        "average": {
+                          "anyOf": [
+                            {
+                              "type": "number"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ],
+                          "default": null
+                        },
+                        "minimum": {
+                          "anyOf": [
+                            {
+                              "type": "number"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ],
+                          "default": null
+                        },
+                        "maximum": {
+                          "anyOf": [
+                            {
+                              "type": "number"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ],
+                          "default": null
+                        },
+                        "total": {
+                          "anyOf": [
+                            {
+                              "type": "number"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ],
+                          "default": null
+                        }
+                      },
+                      "required": [
+                        "recorded_days",
+                        "requested_days"
+                      ],
+                      "type": "object"
+                    },
+                    "sources": {
+                      "items": {
+                        "additionalProperties": true,
+                        "type": "object"
+                      },
+                      "type": "array"
+                    },
+                    "notes": {
+                      "items": {
+                        "type": "string"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "metric",
+                    "query",
+                    "status",
+                    "fetched_at",
+                    "statistics"
+                  ],
+                  "type": "object"
+                },
+                "baseline": {
+                  "properties": {
+                    "provider": {
+                      "const": "google_health",
+                      "default": "google_health",
+                      "type": "string"
+                    },
+                    "metric": {
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "label": {
+                          "type": "string"
+                        },
+                        "unit": {
+                          "type": "string"
+                        },
+                        "aggregation": {
+                          "type": "string"
+                        },
+                        "data_type": {
+                          "type": "string"
+                        },
+                        "required_scope": {
+                          "type": "string"
+                        },
+                        "permission_granted": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "label",
+                        "unit",
+                        "aggregation",
+                        "data_type",
+                        "required_scope",
+                        "permission_granted"
+                      ],
+                      "type": "object"
+                    },
+                    "query": {
+                      "properties": {
+                        "start_date": {
+                          "format": "date",
+                          "type": "string"
+                        },
+                        "end_date": {
+                          "format": "date",
+                          "type": "string"
+                        },
+                        "timezone": {
+                          "default": "UTC",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "start_date",
+                        "end_date"
+                      ],
+                      "type": "object"
+                    },
+                    "status": {
+                      "enum": [
+                        "available",
+                        "no_data",
+                        "missing_permission",
+                        "unavailable",
+                        "provider_error",
+                        "account_not_linked"
+                      ],
+                      "type": "string"
+                    },
+                    "fetched_at": {
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    "samples": {
+                      "items": {
+                        "properties": {
+                          "date": {
+                            "format": "date",
+                            "type": "string"
+                          },
+                          "value": {
+                            "type": "number"
+                          }
+                        },
+                        "required": [
+                          "date",
+                          "value"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    },
+                    "missing_dates": {
+                      "items": {
+                        "format": "date",
+                        "type": "string"
+                      },
+                      "type": "array"
+                    },
+                    "statistics": {
+                      "properties": {
+                        "recorded_days": {
+                          "type": "integer"
+                        },
+                        "requested_days": {
+                          "type": "integer"
+                        },
+                        "latest_value": {
+                          "anyOf": [
+                            {
+                              "type": "number"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ],
+                          "default": null
+                        },
+                        "latest_date": {
+                          "anyOf": [
+                            {
+                              "format": "date",
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ],
+                          "default": null
+                        },
+                        "average": {
+                          "anyOf": [
+                            {
+                              "type": "number"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ],
+                          "default": null
+                        },
+                        "minimum": {
+                          "anyOf": [
+                            {
+                              "type": "number"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ],
+                          "default": null
+                        },
+                        "maximum": {
+                          "anyOf": [
+                            {
+                              "type": "number"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ],
+                          "default": null
+                        },
+                        "total": {
+                          "anyOf": [
+                            {
+                              "type": "number"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ],
+                          "default": null
+                        }
+                      },
+                      "required": [
+                        "recorded_days",
+                        "requested_days"
+                      ],
+                      "type": "object"
+                    },
+                    "sources": {
+                      "items": {
+                        "additionalProperties": true,
+                        "type": "object"
+                      },
+                      "type": "array"
+                    },
+                    "notes": {
+                      "items": {
+                        "type": "string"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "metric",
+                    "query",
+                    "status",
+                    "fetched_at",
+                    "statistics"
+                  ],
+                  "type": "object"
+                },
+                "comparison": {
+                  "properties": {
+                    "basis": {
+                      "const": "personal_recorded_baseline",
+                      "default": "personal_recorded_baseline",
+                      "type": "string"
+                    },
+                    "status": {
+                      "enum": [
+                        "compared",
+                        "missing_day_value",
+                        "insufficient_baseline"
+                      ],
+                      "type": "string"
+                    },
+                    "baseline_recorded_days": {
+                      "type": "integer"
+                    },
+                    "minimum_baseline_days": {
+                      "default": 3,
+                      "type": "integer"
+                    },
+                    "day_value": {
+                      "anyOf": [
+                        {
+                          "type": "number"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "default": null
+                    },
+                    "baseline_average": {
+                      "anyOf": [
+                        {
+                          "type": "number"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "default": null
+                    },
+                    "absolute_change": {
+                      "anyOf": [
+                        {
+                          "type": "number"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "default": null
+                    },
+                    "relative_change_percent": {
+                      "anyOf": [
+                        {
+                          "type": "number"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "default": null
+                    },
+                    "clinical_reference_status": {
+                      "const": "not_assessed",
+                      "default": "not_assessed",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "baseline_recorded_days"
+                  ],
+                  "type": "object"
+                }
+              },
+              "required": [
+                "day",
+                "baseline",
+                "comparison"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "notes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "date",
+          "timezone",
+          "fetched_at",
+          "calendar_day_finished",
+          "metrics",
+          "notes"
+        ],
+        "type": "object"
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true
+      },
+      "_meta": {
+        "fastmcp": {
+          "tags": []
+        }
+      }
+    }
+  ]
+}

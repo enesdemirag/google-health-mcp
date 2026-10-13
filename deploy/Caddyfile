@@ -1,0 +1,4 @@
+{$GOOGLE_HEALTH_MCP_DOMAIN} {
+    header -Server
+    reverse_proxy mcp:8001
+}

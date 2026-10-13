@@ -1,0 +1,42 @@
+name: google-health-mcp
+services:
+  setup:
+    profiles: [setup]
+    build:
+      context: .
+      target: operator-setup
+    user: "${LOCAL_UID:-1000}:${LOCAL_GID:-1000}"
+    network_mode: none
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    volumes:
+      - .:/workspace
+    command: ["--env-file", "/workspace/.env", "--public-base-url", "${GOOGLE_HEALTH_MCP_PUBLIC_BASE_URL:-http://127.0.0.1:8001}"]
+  mcp:
+    build: .
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      GOOGLE_HEALTH_MCP_HOST: 0.0.0.0
+      GOOGLE_HEALTH_MCP_PORT: 8001
+      GOOGLE_HEALTH_MCP_DATA_DIR: /data/oauth
+    ports:
+      - "127.0.0.1:${GOOGLE_HEALTH_MCP_PORT:-8001}:8001"
+    volumes:
+      - mcp_oauth:/data
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    init: true
+    healthcheck:
+      test: ["CMD", "python", "-c", "import os, urllib.request, urllib.parse; host = urllib.parse.urlsplit(os.environ['GOOGLE_HEALTH_MCP_PUBLIC_BASE_URL']).netloc; urllib.request.urlopen(urllib.request.Request('http://127.0.0.1:8001/healthz', headers={'Host': host}), timeout=5)"]
+      interval: 15s
+      timeout: 6s
+      retries: 5
+    restart: unless-stopped
+volumes:
+  mcp_oauth:

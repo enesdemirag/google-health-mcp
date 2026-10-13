@@ -1,0 +1,19 @@
+services:
+  caddy:
+    image: caddy:2-alpine
+    environment:
+      GOOGLE_HEALTH_MCP_DOMAIN: ${GOOGLE_HEALTH_MCP_DOMAIN:?Set the public MCP domain}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - mcp_caddy_data:/data
+      - mcp_caddy_config:/config
+    depends_on:
+      mcp:
+        condition: service_healthy
+    restart: unless-stopped
+volumes:
+  mcp_caddy_data:
+  mcp_caddy_config:
