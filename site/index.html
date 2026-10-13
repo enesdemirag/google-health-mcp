@@ -2,122 +2,124 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="An unofficial, open-source, read-only Google Health MCP server. Connect your health data to your assistant, or self-host with your own Google Cloud project.">
-  <meta name="theme-color" content="#f8f9f5">
-  <title>Google Health MCP — Unofficial &amp; open source</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="Google Health MCP (Unofficial). Read-only access to your sleep, activity and health measurements from your AI assistant. Connect or self-host.">
+  <meta name="theme-color" content="#f7f4ee">
+  <title>Google Health MCP (Unofficial)</title>
+  <link rel="icon" type="image/png" href="assets/healpot-logo.png">
+  <link rel="preload" href="fonts/InstrumentSerif-Regular.ttf" as="font" type="font/ttf" crossorigin>
   <link rel="stylesheet" href="styles.css">
   <script src="app.js" defer></script>
 </head>
 <body>
-  <header class="site-header wrap">
-    <a class="wordmark" href="./" aria-label="Google Health MCP home">Google Health <span>MCP</span></a>
-    <nav aria-label="Main navigation">
-      <a href="#self-host">Self-host</a>
-      <a href="https://github.com/enesdemirag/google-health-mcp">GitHub <span aria-hidden="true">↗</span></a>
-    </nav>
-  </header>
-  <main class="wrap">
-    <section class="hero" aria-labelledby="hero-title">
-      <p class="eyebrow"><span class="dot" aria-hidden="true"></span> Unofficial · Open source · Read-only</p>
-      <h1 id="hero-title">Your health data.<br><span>Your assistant.</span></h1>
-      <p class="intro">Bring your sleep, activity and health measurements into the conversations you already have. Connect with Google, or run your own server.</p>
-      <a class="text-link" href="#connect">Choose your connection <span aria-hidden="true">↓</span></a>
-    </section>
+  <div class="page">
+    <header class="masthead">
+      <a class="identity" href="./">
+        <img src="assets/healpot-logo.png" width="38" height="38" alt="">
+        <span>Google Health MCP <small>(Unofficial)</small></span>
+      </a>
+      <nav aria-label="Main navigation">
+        <a href="#self-host">Self-host</a>
+        <a href="https://github.com/enesdemirag/google-health-mcp">Source ↗</a>
+      </nav>
+    </header>
 
-    <section class="connect-section" id="connect" aria-labelledby="connect-title">
-      <div class="section-heading">
-        <p class="eyebrow">01 / Connect</p>
-        <h2 id="connect-title">A URL. A sign-in. You're connected.</h2>
-        <p>Your assistant requests data through MCP using your own Google authorization.</p>
-      </div>
-      <div class="connection-card">
-        <div class="mode-switch" role="group" aria-label="Connection type">
-          <button type="button" id="hosted-mode" aria-pressed="true">Use the hosted server</button>
-          <button type="button" id="self-mode" aria-pressed="false">Use my own server</button>
+    <main>
+      <section class="hero" aria-labelledby="hero-title">
+        <div class="hero-copy">
+          <p class="kicker">An open-source connection, under your control.</p>
+          <h1 id="hero-title">Google Health,<br><em>meet your agent.</em></h1>
+          <p class="lede">Sleep, activity and health measurements from your Google Health account. Read-only tools for the assistant you already use.</p>
+          <a class="jump" href="#connect">Connect your assistant <span aria-hidden="true">↓</span></a>
         </div>
-        <div id="hosted-info">
-          <p class="availability" id="availability">Checking hosted availability…</p>
-          <p class="muted">No Google Cloud project or installation needed. You choose which health categories to share.</p>
-          <code class="endpoint" id="hosted-endpoint">Loading endpoint…</code>
-        </div>
-        <div id="self-info" hidden>
-          <label for="server-url">Your MCP endpoint</label>
-          <input id="server-url" type="url" placeholder="https://your-server.example/mcp" autocomplete="off" spellcheck="false" aria-describedby="url-hint">
-          <p class="muted" id="url-hint">Already running a server? Paste its HTTPS URL. Local CLI clients can also use http://127.0.0.1:8001/mcp.</p>
-        </div>
-        <label for="client">Choose your assistant</label>
-        <select id="client">
-          <option value="codex">Codex</option>
-          <option value="claude-code">Claude Code</option>
-          <option value="cursor">Cursor</option>
-          <option value="grok">Grok / another MCP assistant</option>
-        </select>
-        <p id="client-instructions" class="client-instructions">Add the HTTP MCP server, then finish OAuth in your browser.</p>
-        <div class="actions">
-          <button class="button primary" id="copy-prompt" type="button" disabled>Copy setup prompt <span aria-hidden="true">↗</span></button>
-          <button class="button secondary" id="copy-url" type="button" disabled>Copy MCP URL</button>
-        </div>
-        <p class="feedback" id="copy-feedback" role="status" aria-live="polite"></p>
-        <details class="prompt-details">
-          <summary>View setup prompt</summary>
-          <textarea id="prompt-preview" readonly aria-label="Setup prompt" rows="10"></textarea>
-        </details>
-      </div>
-      <ol class="steps">
-        <li><span>1</span><div><strong>Add the connection</strong><p>Paste the setup prompt into your coding assistant, or add the MCP URL in its connector settings.</p></div></li>
-        <li><span>2</span><div><strong>Sign in with Google</strong><p>Complete consent in your browser. Your Google account must already be linked to Google Health.</p></div></li>
-        <li><span>3</span><div><strong>Ask about your data</strong><p>Start by checking your connection. Then ask for the records and date range you want to review.</p></div></li>
-      </ol>
-      <p class="small-note">Setup instructions follow the clients' documentation. A connector and its scheduled tasks need their own live compatibility check. <a href="https://github.com/enesdemirag/google-health-mcp/blob/main/docs/clients.md">Connection guide ↗</a></p>
-    </section>
+        <figure class="potion">
+          <img src="assets/healpot-logo.png" width="250" height="250" alt="HealPot's red healing-potion bottle" fetchpriority="high">
+          <figcaption>READ ONLY / GOOGLE OAUTH</figcaption>
+        </figure>
+      </section>
 
-    <section class="examples-section" aria-labelledby="examples-title">
-      <div class="section-heading">
-        <p class="eyebrow">02 / Make it useful</p>
-        <h2 id="examples-title">Small questions. Useful context.</h2>
-      </div>
-      <div class="examples-grid">
-        <article class="example">
-          <span class="example-tag">Morning</span>
-          <h3>A little context for your sleep.</h3>
-          <p>“Review last night's recorded sleep against my preceding seven days. Use my time zone and show any missing data.”</p>
-          <button type="button" class="text-button" data-example="sleep">Copy example <span aria-hidden="true">↗</span></button>
-        </article>
-        <article class="example">
-          <span class="example-tag">Evening</span>
-          <h3>See how your day adds up.</h3>
-          <p>“Review today's activity against the goals I've given you. Compare it with my recent baseline and identify gaps.”</p>
-          <button type="button" class="text-button" data-example="activity">Copy example <span aria-hidden="true">↗</span></button>
-        </article>
-      </div>
-      <p class="small-note">Recurring reports run in your assistant's scheduler, where authenticated MCP tools are supported. This server reads data when called; it does not schedule or deliver reports.</p>
-    </section>
+      <section class="connection" id="connect" aria-labelledby="connect-title">
+        <div class="section-label"><span>THE CONNECTION</span><span>STREAMABLE HTTP · MCP</span></div>
+        <div class="connection-grid">
+          <div class="connection-intro">
+            <h2 id="connect-title">One connection.<br>Your own account.</h2>
+            <ol class="steps">
+              <li><span>01</span><p>Add the MCP URL to your assistant.</p></li>
+              <li><span>02</span><p>Sign in with Google and choose your permissions.</p></li>
+              <li><span>03</span><p>Ask for the data you want to review.</p></li>
+            </ol>
+            <p class="fine-print">Your account must already be linked in the Google Health app. The hosted option uses our Cloud project; self-hosting uses yours.</p>
+          </div>
+          <div class="connection-controls">
+            <div class="mode-switch" role="group" aria-label="Connection type">
+              <button type="button" id="hosted-mode" aria-pressed="true">Hosted server</button>
+              <button type="button" id="self-mode" aria-pressed="false">Your server</button>
+            </div>
+            <div id="hosted-info">
+              <p class="availability" id="availability">Checking hosted availability…</p>
+              <code id="hosted-endpoint" class="endpoint">Loading endpoint…</code>
+            </div>
+            <div id="self-info" hidden>
+              <label for="server-url">YOUR MCP URL</label>
+              <input id="server-url" type="url" placeholder="https://your-server.example/mcp" autocomplete="off" spellcheck="false" aria-describedby="url-hint">
+              <p id="url-hint" class="fine-print">HTTPS for remote assistants. Loopback HTTP works with local CLI clients.</p>
+            </div>
+            <label for="client">YOUR ASSISTANT</label>
+            <select id="client">
+              <option value="codex">Codex</option>
+              <option value="claude-code">Claude Code</option>
+              <option value="cursor">Cursor</option>
+              <option value="grok">Grok / another MCP assistant</option>
+            </select>
+            <p class="client-instructions" id="client-instructions">Add the server and finish Google authorization in your browser.</p>
+            <div class="actions">
+              <button class="primary" id="copy-prompt" type="button" disabled>Copy setup prompt <span aria-hidden="true">↗</span></button>
+              <button class="plain-button" id="copy-url" type="button" disabled>Copy URL</button>
+            </div>
+            <p class="feedback" id="copy-feedback" role="status" aria-live="polite"></p>
+            <details class="prompt-details">
+              <summary>Read the prompt</summary>
+              <textarea id="prompt-preview" readonly aria-label="Setup prompt" rows="10"></textarea>
+            </details>
+          </div>
+        </div>
+      </section>
 
-    <section class="self-host-section" id="self-host" aria-labelledby="self-host-title">
-      <div>
-        <p class="eyebrow">03 / Keep it yours</p>
-        <h2 id="self-host-title">Prefer your own server?</h2>
-        <p>Use your own Google Cloud project and Web OAuth client. Run one independent Docker service with encrypted authorization storage.</p>
-        <a class="button secondary" href="https://github.com/enesdemirag/google-health-mcp/blob/main/docs/self-hosting.md">Read the self-host guide <span aria-hidden="true">↗</span></a>
-      </div>
-      <div class="source-note">
-        <span class="example-tag">MIT licensed</span>
-        <p>Seven read-only tools.<br>Seventeen supported measurements.<br>No health-history database.</p>
-        <a class="text-link" href="https://github.com/enesdemirag/google-health-mcp">Explore the source ↗</a>
-      </div>
-    </section>
+      <section class="questions" aria-labelledby="questions-title">
+        <h2 id="questions-title">A good place to start.</h2>
+        <div class="question-row">
+          <span class="question-label">SLEEP</span>
+          <p>“How did last night's sleep compare with my last seven days?”</p>
+          <button type="button" class="plain-button" data-example="sleep" aria-label="Copy sleep question">Copy ↗</button>
+        </div>
+        <div class="question-row">
+          <span class="question-label">ACTIVITY</span>
+          <p>“Review today's activity against the goals I've given you.”</p>
+          <button type="button" class="plain-button" data-example="activity" aria-label="Copy activity question">Copy ↗</button>
+        </div>
+        <p class="fine-print">For recurring reports, use an assistant scheduler that supports authenticated MCP tools. Scheduling and analysis happen in your assistant.</p>
+      </section>
 
-    <section class="privacy-note" aria-labelledby="privacy-title">
-      <h2 id="privacy-title">Know where your data goes.</h2>
-      <p>The MCP server reads your authorized records and sends requested results to the assistant you connect. It does not persist health measurements; OAuth credentials are stored encrypted. Your assistant's own data policies also apply.</p>
-      <p>Coverage depends on your device, permissions and recorded data. Personal baselines describe your history and are not clinical reference ranges.</p>
-      <a href="https://github.com/enesdemirag/google-health-mcp/blob/main/docs/privacy.md">Data handling &amp; disconnect ↗</a>
-    </section>
-  </main>
-  <footer class="site-footer wrap">
-    <p>Unofficial. Not affiliated with or endorsed by Google.</p>
-    <div><a href="https://github.com/enesdemirag/google-health-mcp/blob/main/LICENSE">MIT license</a><a href="https://github.com/enesdemirag/google-health-mcp/issues">Support</a></div>
-  </footer>
+      <section class="self-host" id="self-host" aria-labelledby="self-host-title">
+        <div>
+          <p class="kicker">MIT LICENSED / SELF-HOSTABLE</p>
+          <h2 id="self-host-title">Run it yourself.</h2>
+          <p>Your Google Cloud project. Your Web OAuth client. An independent Docker service with encrypted authorization storage.</p>
+        </div>
+        <a class="guide-link" href="https://github.com/enesdemirag/google-health-mcp/blob/main/docs/self-hosting.md">Self-hosting guide <span aria-hidden="true">↗</span></a>
+      </section>
+
+      <aside class="data-note" aria-label="Data handling">
+        <strong>About your data</strong>
+        <p>Requested results go to the assistant you connect. Health measurements are not persisted by this server; OAuth credentials are stored encrypted. Your assistant's data policies also apply. Coverage depends on what was recorded and the permissions you grant.</p>
+        <a href="https://github.com/enesdemirag/google-health-mcp/blob/main/docs/privacy.md">Data handling &amp; disconnect ↗</a>
+      </aside>
+    </main>
+
+    <footer>
+      <p>Not affiliated with or endorsed by Google.</p>
+      <div><a href="https://github.com/enesdemirag/google-health-mcp/blob/main/LICENSE">MIT</a><a href="https://github.com/enesdemirag/google-health-mcp/blob/main/docs/clients.md">Docs</a><a href="https://googlehealth.enesdemirag.com/privacy">Hosted privacy</a></div>
+    </footer>
+  </div>
 </body>
 </html>
