@@ -1,25 +1,25 @@
-# Data handling, disconnect and operator policy
+# Data handling
 
-This document describes the software. It is not a blanket privacy policy for every operator who self-hosts it. A hosted operator must identify themselves, their hosting region, contact, retention/deletion procedures and selected assistant recipients in their own policy and authorization disclosure.
+This page describes the software. Each hosted operator needs their own privacy policy with their identity, hosting region, contact details, retention and deletion rules, and assistant recipients.
 
-## Data flow
+## What the server reads and stores
 
-The user authorizes a particular assistant connection and selects Google Health read permissions. The MCP server uses that user's Google authorization to read the requested records, normalizes them in memory and returns results to that assistant. The assistant/AI provider receives those requested health results; its own privacy, retention and training settings apply independently.
+You authorize an assistant connection and choose Google Health read permissions. The server reads your requested records, converts them in memory and sends the results to that assistant. The assistant's privacy, retention and training settings apply separately.
 
-The software stores encrypted Google access/refresh credentials, MCP credential mappings, client registrations and temporary OAuth state in its persistent authorization volume. It does not persist health measurements or create a health-result cache. Encryption does not prevent the operating server from reading records needed to answer a request.
+The server encrypts Google access and refresh credentials, MCP credential mappings, client registrations and temporary OAuth state in its authorization volume. It stores no health measurements or result cache. The running server can still read the records needed to answer a request.
 
-Do not log authorization URLs, tokens, request/response bodies or health values. Readiness probes do not access Google records. All repository fixtures and examples are synthetic.
+Operators should not log authorization URLs, tokens, health values or request and response bodies. Readiness checks do not call Google. Repository fixtures and examples use synthetic data.
 
 ## Disconnect
 
-1. Remove or disconnect the MCP connector in the assistant.
-2. Revoke the operator application's access through your [Google Account third-party connections](https://myaccount.google.com/connections).
-3. Contact the operator to request deletion of remaining encrypted authorization references and applicable backups. Revoking at Google and deleting stored references are separate actions.
+1. Remove the MCP connector from your assistant.
+2. Revoke the application's access in [Google Account connections](https://myaccount.google.com/connections).
+3. Ask the operator to delete remaining authorization references and applicable backups.
 
-The current server does not advertise an RFC 7009 revocation endpoint, automatically revoke a Google grant when an assistant disconnects, or expose a per-user account-deletion UI. Stored references have expiration times; operator-managed cleanup and backup retention still matter. An operator must provide an appropriate deletion procedure before running a public shared service.
+Removing a connector does not revoke the Google grant. The server has no per-user deletion UI or RFC 7009 revocation endpoint. References expire, but operators must handle storage cleanup and backup deletion. A public service needs a per-user deletion process.
 
 ## Google Limited Use
 
-Use of information received from Google Health API must adhere to the [Google Health API Developer and User Data Policy](https://developers.google.com/health/policies/health-api-developer-user-data-policy), including its Limited Use requirements. Operators must make their own accurate disclosure and obtain consent before transferring health results to an assistant or another third party for the disclosed health/fitness features.
+Operators must follow the [Google Health API Developer and User Data Policy](https://developers.google.com/health/policies/health-api-developer-user-data-policy), including Limited Use requirements. Explain the health or fitness purpose and obtain consent before sending records to an assistant or another third party.
 
-Google requires prominent disclosure during authorization, not only a link to a privacy policy. Self-hosting or using an MIT-licensed server does not remove Google's access, use, verification or security-assessment requirements.
+Google requires a visible disclosure during authorization, beyond the privacy policy link. Self-hosting and the MIT license do not remove Google's verification or security-assessment requirements.

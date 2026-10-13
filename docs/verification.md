@@ -1,73 +1,44 @@
-# Verification evidence
+# Verification
 
-Checked locally on 2026-10-13. These checks concern the independent MCP package; they do not establish public deployment, Google verification approval, real Google consent for the new callback, or a completed connection in an external assistant.
+The checks below passed on 2026-10-13. They use synthetic Google responses and do not prove a live Google account connection, external assistant compatibility or Google approval.
 
 ## Automated checks
 
-```sh
-uv sync --locked --python 3.12
-uv run --locked pytest -q
-uv run --locked ruff check src tests scripts
-uv run --locked ruff format --check src tests scripts
-uv run --locked python -m compileall -q src
-```
+All 44 tests passed, along with lint, formatting, compilation and `git diff --check`. Run the [development commands](../README.md#development) to repeat them.
 
-Result: **44 tests passed**. Lint, formatting and compilation passed. `git diff --check` passed.
+The tests cover:
 
-Coverage includes:
+- OAuth discovery, client registration, anonymous request rejection and S256 PKCE for both OAuth flows.
+- Consent disclosure, CSRF protection, browser binding and callback or code replay rejection.
+- Rejection of unapproved callbacks, write scopes, raw Google tokens and tokens for another client audience.
+- Encrypted storage across server instances, refresh token rotation and concurrent calls from two separate users.
+- Partial consent, missing values, units, sleep and workout parsing, date validation and query limits.
+- Pagination, 14-day query chunks, repeated cursors, bounded retries and errors instead of partial success.
+- Personal baselines, minimum recorded-day coverage, zero and Celsius handling, prompt dates and user-supplied goals.
+- Private setup files, preservation of existing keys, rejection of Desktop clients, read-only tool annotations and schemas.
 
-- OAuth resource/server discovery, dynamic client registration and anonymous HTTP MCP rejection.
-- Server-owned Google client/callback selection, downstream and independent upstream S256 PKCE.
-- Browser consent, CSRF rejection, callback browser binding and callback/code replay rejection.
-- Prominent health-data/assistant-sharing disclosure before consent, while retaining CSRF, frame protection and the content security policy.
-- Rejection of unapproved callback hosts, requested write scopes, raw Google bearer tokens and tokens for a different Google OAuth audience.
-- Encrypted OAuth state and credential persistence across a separate server instance.
-- Rotated client refresh tokens and retention of private Google credentials on the server.
-- Concurrent HTTP tool calls from two independently authorized users with distinct records.
-- Partial and zero health consent, capability schemas and read-only annotations.
-- ISO date/time-zone validation, unknown metric and extra user-ID input rejection before provider calls.
-- Documented Google field/unit mappings, real zero versus missing values, sleep/workout parsing.
-- Fourteen-day rollup chunks, pagination, repeated cursor rejection, full failure instead of partial success, and bounded retry.
-- Invalid sleep/workout intervals and unavailable/unlinked provider states.
-- Private operator configuration files and refusal to overwrite existing keys or accept a Desktop OAuth client as the shared Web client.
-- Daily report ranges that exclude the current reading from its personal baseline, minimum recorded-day coverage, zero/Celsius percentage handling and explicit unassessed clinical ranges.
-- Current local-date resolution in morning/evening prompts, per-metric consent, future-date/baseline-bound rejection and user-supplied goal handling.
+Production code has no synthetic-data mode. The exported catalog has seven tools with input and output schemas.
 
-OAuth and provider requests in these tests use synthetic, isolated HTTP transports. Production code has no synthetic-data mode. This suite does not send requests to a real Google account.
-
-## Docker and Compose
+## Docker and website checks
 
 ```sh
 docker build -t google-health-mcp:local .
 ```
 
-The independent image built successfully, including locked dependency installation and a non-editable package build.
+The image built with locked dependencies. A temporary container used test credentials and temporary OAuth storage. It ran as a non-root user with a read-only filesystem. `/healthz` returned readiness, OAuth discovery returned the configured MCP URL, and an anonymous `/mcp` request returned `401`. The container was removed without contacting Google or changing other application services.
 
-A temporary container was started with test-only operator credentials, no backend containers, a read-only root filesystem, a non-root user and temporary OAuth storage. The following actual HTTP checks passed:
+Compose configuration passed. The `setup` command created a private `0600` `.env` with fresh keys and no Google credentials. Normal Compose operation starts `mcp`, and the optional HTTPS configuration adds Caddy.
 
-- `/healthz` returned service readiness.
-- `/.well-known/oauth-protected-resource/mcp` advertised the configured public MCP resource URL.
-- An anonymous `/mcp` request returned `401`.
-- Container inspection confirmed the `google-health-mcp` user and read-only root filesystem.
+The website loaded the HealPot logo and local fonts at desktop and 390-pixel mobile widths without horizontal overflow. Self-host mode generated the expected Codex prompt. When clipboard access failed, the page selected the prompt for manual copying. Automatic clipboard access was not verified. The site labels hosted access as a pilot while Google verification is incomplete.
 
-The temporary container was stopped and removed. The check did not contact Google or retain health data. No existing dashboard container, volume, database, or native application was restarted or modified.
+## Live account checks
 
-The Compose configuration resolved successfully. Normal operation starts only `mcp`; the optional HTTPS overlay adds `caddy`. The `setup` profile provides a separate configuration container. Its documented command was exercised: it created a mode-0600 `.env` with new keys and no Google credentials, and exited. Neither deployment configuration contains or depends on other application services. Real Web OAuth credentials are still required before operation.
+Before claiming a live connection works:
 
-The website was checked in a browser at desktop and 390-pixel mobile widths, with no horizontal overflow. Self-host selection generated the expected Codex prompt. Clipboard denial revealed and selected a manual-copy fallback; automatic clipboard access was not available in that browser session. The redesigned page loads the approved HealPot logo and locally hosted Instrument Serif/DM Mono fonts. Hosted access is labeled as a pilot while Google verification remains incomplete; process readiness does not establish a real Health account connection.
+1. Configure real Web OAuth credentials and persistent keys. Register the exact `/auth/callback` URL without removing callbacks used by other apps.
+2. Confirm that the assistant can reach the HTTPS server and that its callback is allowed.
+3. Sign in, grant Health permissions and check that `get_connection_status` returns `connected`.
+4. Read a measurement you know exists and check its source, date and unit.
+5. Test a second account, partial consent, refresh and Google-side revocation. Confirm that each account can read only its own records.
 
-The exported tool catalog contains seven tools and machine-readable input/output schemas. Tool export is a schema artifact, not a completed account connection.
-
-## Real account and external client verification
-
-Before reporting a live connection as working:
-
-1. Configure the operator's real Web OAuth credentials and persistent keys privately.
-2. Register the exact MCP `/auth/callback` URL in Google; retain existing application callbacks.
-3. Make the HTTPS endpoint reachable from the selected assistant and configure its actual callback allowlist.
-4. Sign in through that assistant and grant selected Health scopes.
-5. Confirm `get_connection_status` returns `connected`, then query a measurement known to exist.
-6. Test a second independent Google account, partial consent, refresh and Google-side revocation.
-7. Check account isolation and real source/calendar interpretation in each target assistant.
-
-Grok, Grok Bot, Codex, Claude and Muse documentation is cited in [clients.md](clients.md). Their protocol support is documented; this implementation has not been connected to those external services in this run. Muse review/listing and Google's public-app approval remain independent processes.
+Repeat these checks for each target assistant. [Client documentation](clients.md) describes supported connection methods. This implementation has not completed live connections with those services in this verification run. Muse listing and Google app approval need their own reviews.

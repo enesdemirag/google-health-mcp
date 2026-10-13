@@ -1,11 +1,7 @@
 # Security
 
-Report vulnerabilities privately at:
+[Report vulnerabilities privately](https://github.com/enesdemirag/google-health-mcp/security/advisories/new). Include the affected version, impact and steps to reproduce with synthetic data. Do not include health records, working tokens or client secrets. Do not report vulnerabilities that could expose user data in public issues.
 
-https://github.com/enesdemirag/google-health-mcp/security/advisories/new
+Operators should keep dependencies updated, use HTTPS, restrict callback hosts, protect keys and encrypted backups, and rate-limit authorization endpoints. See the [deployment guide](docs/deployment.md). Repository tests do not replace Google's verification or security assessment.
 
-Do not include health records, working tokens or client secrets in a report. Provide a synthetic reproduction, affected version and expected impact. Do not open a public issue for a vulnerability that could expose credentials or another user's records.
-
-Operators must keep dependencies updated, serve public traffic over HTTPS, restrict OAuth callback hosts, protect encryption/signing keys and authorization backups, and apply rate limits to public authorization endpoints. Google verification and security assessment are separate from this repository's tests.
-
-The current persistent OAuth storage supports one application process on one host. Do not scale it across workers or hosts without a shared transactional design and concurrency validation.
+Run one application process on one host. Multiple workers or hosts need shared transactional OAuth storage and concurrency testing.

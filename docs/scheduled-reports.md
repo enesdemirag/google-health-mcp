@@ -1,80 +1,67 @@
-# Scheduled, read-only health insight reports
+# Scheduled reports
 
-A user connects Google Health MCP once through Google sign-in, then asks an assistant that supports scheduled tasks to run a morning or evening workflow. Scheduling and delivery happen in that assistant. Google Health MCP has no internal scheduler, outbound notification service, goal database or AI model; it returns this user's authorized Google Health data and descriptive arithmetic when called.
+Connect your Google account once, then use an assistant with scheduled tasks to request daily reports. The assistant keeps your goals, runs the schedule and delivers the report. HealPot reads authorized data and computes personal comparisons when called. It has no scheduler or AI model.
 
-The Google OAuth proxy keeps provider tokens private and supports refresh. Persist both keys and OAuth storage across restarts. If Google authorization or the MCP refresh grant expires or is revoked, the scheduled task must ask the user to reconnect rather than inventing a report. Testing-mode Google grant limits can make unattended development connections shorter-lived than a publicly approved app.
+Set the schedule's time zone. Each run should resolve the local date, check the connection and ask you to reconnect if authorization has expired or been revoked.
 
 ## Morning sleep report
 
-Example schedule: **09:00 every day, Europe/Istanbul**. Set the assistant's schedule time zone explicitly; do not interpret 09:00 as the server's UTC time.
-
-The task can request the `morning_sleep_review` prompt with `timezone="Europe/Istanbul"` at every invocation. Alternatively, use this English instruction in the assistant's scheduler:
+Use this instruction in your assistant's scheduler.
 
 ```text
-Every morning at 09:00 Europe/Istanbul, use my connected Google Health MCP MCP to review the
-sleep sessions ending on today's local date. Check connection status first.
-Use get_daily_health_context for sleep_duration, hrv and resting_heart_rate,
-with a seven-day personal baseline, and get_sleep_sessions for available stages.
+Every day at 09:00 Europe/Istanbul, review the sleep sessions ending on today's
+local date through my connected Google Health MCP server.
 
-Prepare a concise report: what was recorded, changes from my personal baseline,
-one useful observation, and the data gaps. Show the recorded date and retrieval
-time. Do not replace missing sleep with zero, time in bed, or invented stages.
-If the sleep record has not arrived yet, say so. A personal baseline deviation
-is not a clinical abnormality. Deliver the report through this assistant's
-configured task channel.
+Check get_connection_status first. Use get_daily_health_context for
+sleep_duration, hrv and resting_heart_rate with a seven-day baseline.
+Use get_sleep_sessions for recorded stages.
+
+Report the recorded dates, retrieval time, units, changes from my baseline
+and data gaps. Include one useful observation. If the sleep record has not
+arrived, say so. Do not replace missing sleep with zero or time in bed,
+invent stages, or treat a baseline change as a clinical abnormality.
+Deliver through this assistant's task channel.
 ```
 
-For a report date `D`, query sessions with `start_date=D` and `end_date=D+1`. Sleep belongs to its recorded end date. The personal baseline reads `D-7` through `D` exclusively, so the current sleep result cannot contaminate its baseline. At least three recorded baseline days are required for a comparison.
+You can also invoke `morning_sleep_review(timezone="Europe/Istanbul")` on each run. For a report date `D`, read sessions with `start_date=D` and `end_date=D+1`. Sleep belongs to its recorded end date. The seven-day baseline excludes `D` and needs at least three recorded days.
 
 ## Evening goal review
 
-Example schedule: **21:00 every day, Europe/Istanbul**. The user supplies their own goals to the assistant, such as an already-chosen activity target or a training plan. Google Health MCP does not prescribe targets or persist those preferences.
-
-The task can request `evening_goal_review(goals=..., timezone="Europe/Istanbul")` on each run, or use this instruction:
+Give the assistant your goals, then use this instruction.
 
 ```text
-Every evening at 21:00 Europe/Istanbul, use my connected Google Health MCP MCP to review
-today's recorded health data against the goals I gave you. Resolve today's
-date in that time zone on each run. Check connection status and permitted
-metrics, then use get_daily_health_context for relevant measurements and
-get_workouts when training is relevant.
+Every day at 21:00 Europe/Istanbul, review today's recorded health data against
+the goals I gave you. Resolve today's local date on each run.
 
-Write a short report with goal progress, descriptive changes from my prior
-seven recorded calendar days, missing data, and one next step grounded in my
-stated goals. Mark unsupported goal judgments as unassessed. Today's totals
-are provisional; device synchronization and late logging may change them.
+Check the connection and permitted metrics. Use get_daily_health_context for
+relevant measurements and get_workouts when reviewing training.
 
-Keep goal targets, personal baselines, and clinical reference intervals
-separate. If a reference-range assessment is relevant, verify and cite a
-reliable source appropriate to the measurement and my known context. Do not
-apply instantaneous-reading ranges to daily summaries. If that context or
-research capability is unavailable, mark the clinical assessment not assessed.
-Use generic public research queries without including identifiable health
-records. Do not diagnose or infer causation. Deliver through this assistant's
-configured task channel.
+Report the date, retrieval time, goal progress, changes from the previous seven
+calendar days, units, aggregation methods, recorded-day coverage and missing data.
+Suggest one next step based on my goals.
+Leave unsupported goal judgments unassessed. Today's totals are provisional
+because device uploads and late logging can change them.
+
+Keep personal goals, baselines and clinical ranges separate. For a clinical
+comparison, cite a reliable reference that fits the measurement and my context.
+Do not apply ranges for individual readings to daily averages. If the reference
+or context is missing, leave the assessment unassessed. Keep identifiable health
+records out of public research queries. Do not diagnose or infer causation.
+Deliver through this assistant's task channel.
 ```
 
-## What can be assessed
+You can also invoke `evening_goal_review(goals=..., timezone="Europe/Istanbul")` on each run. HealPot does not store your goals.
 
-| Comparison | Source | Report interpretation |
-| --- | --- | --- |
-| Progress toward a personal goal | The user's explicit target, retained by the assistant | Assess only when the recorded metric and target refer to the same quantity and period |
-| Change from a personal baseline | The user's preceding permitted, recorded calendar days | Descriptive arithmetic; minimum three recorded baseline days; not a medical classification |
-| Within/outside a clinical interval | Independently verified, measurement-appropriate reference plus necessary user context | The assistant must cite the reference; otherwise leave it unassessed |
+## Interpret the results
 
-The MCP tools do not research the web or assign clinical reference intervals. The chosen assistant can use its own research tools when available. A nightly skin-temperature reading, a provider daily heart-rate average, an intraday resting reading and a laboratory measurement have different meanings; units alone do not establish interchangeable clinical thresholds.
+| Comparison | What it needs |
+| --- | --- |
+| Goal progress | A user-supplied target for the same quantity and period |
+| Personal baseline change | At least three recorded days before the report day |
+| Clinical range | A cited reference for the specific measurement and relevant user context |
 
-## Report structure
+HealPot does not research clinical ranges. Your assistant needs its own research tools for that comparison. A daily average, nightly temperature and laboratory result are different measurements even when they share a unit.
 
-A useful report contains:
+At 21:00, today's reporting period is still open. `calendar_day_finished` is false, and `provider_coverage_complete` remains unknown. A successful request does not prove that every device has synchronized.
 
-1. Report date/time zone, recorded measurement dates and retrieval time.
-2. Observations with units and explicit daily aggregation methods.
-3. Goal progress where a matching goal was provided.
-4. Descriptive personal-baseline changes with recorded-day coverage.
-5. Separately sourced clinical-range assessments, or an explicit unassessed status.
-6. Missing permissions, absent readings, failed queries and possible late synchronization.
-
-The current day is not a finished reporting period at 21:00. `calendar_day_finished` is false for today; `provider_coverage_complete` remains unknown for all days. An assistant should not label the available cloud data complete merely because the MCP request succeeded.
-
-Scheduled task capability and authorization handling belong to each client. The recipes are documentation and MCP prompts, not tasks created in Codex, Claude, Grok, Grok Bot or Muse by this repository change.
+Invoke MCP prompts again on each scheduled run. Saving an already-rendered prompt can freeze its date. These recipes do not create tasks in an assistant. See [client setup](clients.md) and [tool details](tools.md).

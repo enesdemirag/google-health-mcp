@@ -1,9 +1,9 @@
 # Contributing
 
-Keep this project focused on read-only Google Health access through MCP. Open a small issue or pull request explaining the user-visible problem, the proposed change and relevant verification.
+Keep changes focused on read-only Google Health access. Open an issue or pull request that explains the problem, expected behavior and how you checked the change.
 
-Use Python 3.12 or 3.13 and `uv sync --locked`. Run the checks in the README before submitting. Preserve per-user isolation, granular consent, bounded queries, units, source provenance and missing-data states.
+Use Python 3.12 or 3.13. Run the [development checks](README.md#development) before submitting. Preserve account isolation, partial consent, query limits, units, source details and missing-data states.
 
-Use synthetic fixtures only. Never contribute real provider responses, health measurements, account IDs, credentials, OAuth storage, logs or private operator configuration. Submit security vulnerabilities using the private reporting route in SECURITY.md.
+Use synthetic fixtures. Never include health records, account IDs, credentials, OAuth storage, logs or private operator configuration. Report vulnerabilities through the [private security route](SECURITY.md).
 
-Documentation and tool descriptions are English. Contributions are licensed under the project's MIT license.
+Write documentation and tool descriptions in English. Contributions use the project's MIT license.

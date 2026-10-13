@@ -1,97 +1,78 @@
-# Operator deployment and security
+# Deployment
 
-## Independent application
+HealPot runs independently with its own process, port, dependencies and OAuth storage. It needs no dashboard, native app or separate database service. Start with [self-hosting](self-hosting.md).
 
-The service runs independently with its own dependencies, process, port and encrypted OAuth storage. It does not require a dashboard, database or native application. The Google Health adapter lives in `src/google_health_mcp/google.py`. Start with [self-hosting](self-hosting.md).
+## Authorization
 
 ```mermaid
 sequenceDiagram
     participant User
     participant Assistant
-    participant MCP as Google Health MCP MCP
-    participant Google as Google OAuth / Health
-    User->>Assistant: Add the hosted MCP URL
-    Assistant->>MCP: Discover/register OAuth client; start S256 authorization
-    MCP->>User: Confirm assistant connection
+    participant MCP as HealPot
+    participant Google as Google OAuth and Health
+    User->>Assistant: Add the MCP URL
+    Assistant->>MCP: Register a client and start S256 authorization
+    MCP->>User: Ask for connection consent
     User->>Google: Sign in and choose read permissions
-    Google->>MCP: Authorization code at /auth/callback
-    MCP->>Google: Exchange code using operator credentials and independent PKCE
-    MCP->>Assistant: Server-issued code, then MCP credentials
-    Assistant->>MCP: Authenticated health tool request
-    MCP->>Google: Read users/me using this request's Google authorization
-    Google->>MCP: Recorded health data
-    MCP->>Assistant: Structured data, coverage and units
+    Google->>MCP: Send a code to /auth/callback
+    MCP->>Google: Exchange the code using the operator's client and PKCE
+    MCP->>Assistant: Issue separate MCP credentials
+    Assistant->>MCP: Request a health tool
+    MCP->>Google: Read users/me with this user's Google token
+    Google->>MCP: Return recorded data
+    MCP->>Assistant: Return results with units and coverage
 ```
 
-FastMCP's Google OAuth proxy bridges Google's operator-registered Web client with MCP client registration/discovery. It validates Google access-token identity, scopes, expiry and operator OAuth audience, mints separate MCP reference tokens, and maintains encrypted upstream credentials. The server never accepts a raw Google token as an MCP credential. [Google provider](https://gofastmcp.com/integrations/google), [OAuth proxy](https://gofastmcp.com/servers/auth/oauth-proxy).
+FastMCP's [Google provider](https://gofastmcp.com/integrations/google) and [OAuth proxy](https://gofastmcp.com/servers/auth/oauth-proxy) connect MCP clients to the operator's Web OAuth client. The proxy checks Google identity, scopes, expiry and client audience. It stores Google credentials encrypted and issues separate MCP reference tokens. Raw Google tokens cannot authenticate MCP requests.
 
-## Google configuration
+The server requires `openid`. Health scopes are optional during sign-in, and each tool checks the granted categories. Without a health scope, tools return `missing_permission` without calling Google. The server requests no write, location, email or profile permission. See the [scope list](self-hosting.md#google-cloud-setup) and [Google's scope guide](https://developers.google.com/health/scopes).
 
-The operator enables Google Health API and owns the OAuth consent screen and Web application client. End users authorize their own Google accounts; no end-user Google project or CLI is part of this flow. [Google Health setup](https://developers.google.com/health/setup).
+Register the server's `/auth/callback` URL in Google. Keep any callbacks that other applications still use. Offline access and explicit consent allow token refresh. See [Google setup](https://developers.google.com/health/setup) and [web-server OAuth](https://developers.google.com/identity/protocols/oauth2/web-server).
 
-The server requests `openid` for account identity, plus:
-
-```text
-https://www.googleapis.com/auth/googlehealth.activity_and_fitness.readonly
-https://www.googleapis.com/auth/googlehealth.sleep.readonly
-https://www.googleapis.com/auth/googlehealth.health_metrics_and_measurements.readonly
-https://www.googleapis.com/auth/googlehealth.nutrition.readonly
-```
-
-The health scopes are requested up front but are not all mandatory. Google can return granular consent; authorization accepts the required identity scope, and tools check the actual granted health scopes individually. Sign-in without any health scope reports `missing_permission` and performs no Health API request. No write, location, email or profile permission is requested. [Google Health scopes](https://developers.google.com/health/scopes).
-
-Register the public URL plus `/auth/callback` as a Google redirect. This is the **upstream Google callback**, not an assistant's callback. Keep the backend's existing callback if reusing the operator client. `access_type=offline` and explicit consent allow server-side refresh; Google testing-mode grant limits still apply. [Google web-server OAuth](https://developers.google.com/identity/protocols/oauth2/web-server).
-
-The Google account must be linked in the Google Health mobile app before health data is available. The connection-status tool verifies `/v4/users/me/identity`. Google OAuth approval by itself is not a verified Health identity. [Health identity](https://developers.google.com/health/reference/rest/v4/users/getIdentity).
-
-Publishing an external Google consent screen, verification of requested scopes and any required assessment are operator responsibilities. Local server or protocol checks do not establish Google approval, unrestricted public access or successful external-assistant connections.
+Health requests always use the authenticated user's `users/me` path. `get_connection_status` checks [Health identity](https://developers.google.com/health/reference/rest/v4/users/getIdentity). Google sign-in alone does not prove that the account is linked to Google Health.
 
 ## Configuration
 
 | Variable | Purpose |
 | --- | --- |
-| `GOOGLE_HEALTH_MCP_GOOGLE_CLIENT_ID` | Operator's Google Web OAuth client ID |
-| `GOOGLE_HEALTH_MCP_GOOGLE_CLIENT_SECRET` | Operator's Google client secret |
-| `GOOGLE_HEALTH_MCP_STORAGE_ENCRYPTION_KEY` | Independent Fernet key for OAuth storage |
-| `GOOGLE_HEALTH_MCP_TOKEN_SIGNING_KEY` | At least 32 random characters; stable MCP token signing key |
-| `GOOGLE_HEALTH_MCP_PUBLIC_BASE_URL` | Public HTTPS origin, without `/mcp` or any path |
-| `GOOGLE_HEALTH_MCP_PRIVACY_POLICY_URL` | Operator's own HTTPS policy, linked in health-data sharing consent |
-| `GOOGLE_HEALTH_MCP_HOST` | Process bind address; Docker sets `0.0.0.0` |
-| `GOOGLE_HEALTH_MCP_PORT` | Host process/published Compose port; default `8001` |
-| `GOOGLE_HEALTH_MCP_DATA_DIR` | Private persistent OAuth store; Docker uses `/data/oauth` |
-| `GOOGLE_HEALTH_MCP_ALLOWED_CLIENT_REDIRECT_URIS` | JSON list of approved assistant callback patterns |
+| `GOOGLE_HEALTH_MCP_GOOGLE_CLIENT_ID` | Google Web OAuth client ID |
+| `GOOGLE_HEALTH_MCP_GOOGLE_CLIENT_SECRET` | Google client secret |
+| `GOOGLE_HEALTH_MCP_STORAGE_ENCRYPTION_KEY` | Fernet key for OAuth storage |
+| `GOOGLE_HEALTH_MCP_TOKEN_SIGNING_KEY` | Stable signing key with at least 32 random characters |
+| `GOOGLE_HEALTH_MCP_PUBLIC_BASE_URL` | Public HTTPS origin with no path |
+| `GOOGLE_HEALTH_MCP_PRIVACY_POLICY_URL` | HTTPS privacy policy linked during consent |
+| `GOOGLE_HEALTH_MCP_HOST` | Bind address, set to `0.0.0.0` in Docker |
+| `GOOGLE_HEALTH_MCP_PORT` | Host port, default `8001` |
+| `GOOGLE_HEALTH_MCP_DATA_DIR` | OAuth storage directory, `/data/oauth` in Docker |
+| `GOOGLE_HEALTH_MCP_ALLOWED_CLIENT_REDIRECT_URIS` | JSON list of allowed assistant callback patterns |
 
-Public HTTP origins and wildcard redirect hosts are rejected. Development HTTP is restricted to loopback origins. The shipped redirect allowlist covers loopback native clients and fixed `claude.ai`, `chatgpt.com`, `grok.com`, and `muse.ai` hosts. Verify the actual callback of each target client and narrow patterns for deployment; add other fixed HTTPS callback hosts deliberately. Do not replace the list with a universal wildcard.
+HTTP is allowed only for loopback development. The default callback list permits loopback clients and HTTPS callbacks on `claude.ai`, `chatgpt.com`, `grok.com` and `muse.ai`. Check each client's actual callback and narrow the list for your deployment. Add other fixed hosts as needed. Universal host wildcards are rejected.
 
-Built-in assistant consent remains enabled and binds Google callbacks to the browser that approved the connection. Host and Origin checks protect the HTTP application. Upstream Google authorization does not receive MCP's `resource` parameter; server-issued MCP tokens are still bound to this server's resource audience.
+Connection consent binds the Google callback to the approving browser. Host and Origin checks protect HTTP requests. MCP tokens are bound to this server's resource audience. The proxy does not forward MCP's `resource` parameter to Google.
 
-## HTTPS with the optional proxy
+## HTTPS
 
-Point the domain's DNS to the host. Set these in the private `.env`:
+Follow [public HTTPS setup](self-hosting.md#public-https). Route the whole domain to the MCP service so discovery, consent, callbacks and token requests work. Forward the public Host header and disable URL, query and body logging.
 
-```dotenv
-GOOGLE_HEALTH_MCP_PUBLIC_BASE_URL=https://YOUR_MCP_DOMAIN
-GOOGLE_HEALTH_MCP_DOMAIN=YOUR_MCP_DOMAIN
-```
+The optional Caddy proxy uses ports 80 and 443. If another proxy already owns those ports, use a separate virtual host on that proxy. `/healthz` checks readiness without contacting Google.
 
-Register `https://YOUR_MCP_DOMAIN/auth/callback` in Google, then run from the repository root:
+## Storage and upgrades
 
-```sh
-docker compose -f compose.yaml -f compose.production.yaml up -d --build
-```
+Fernet encrypts Google credentials, client registrations, OAuth transactions, codes and token mappings in the persistent disk store. The private directory uses permissions `0700`. Protect disk metadata, traffic metadata and backups through host access controls.
 
-The overlay is an optional independent Caddy proxy. If the host already serves HTTPS on ports 80/443, add a virtual host to that proxy instead of trying to bind a second proxy on those ports. Route the full domain to the MCP service so OAuth discovery, consent, callback and token paths work as well as `/mcp`. Preserve the original public Host header. Do not enable URL/query/body access logging on OAuth or health requests.
+The server reads health records on demand and stores no health history or shared result cache. Your chosen assistant receives the requested results and applies its own processing and retention policies.
 
-The container health check tests process readiness; it makes no Google request. Local operation and tests do not publish DNS, obtain Google approval or connect any external account.
+MCP access tokens normally follow Google's access-token lifetime. Refresh references have a fallback maximum lifetime of 30 days. Google expiry or revocation still takes effect. Testing-mode Google refresh tokens may expire sooner. MCP refresh tokens rotate, and renewed Google credentials stay on the server.
 
-## Isolation, storage and disconnect
+Keep `.env`, both keys and the OAuth volume private. Back up the keys and volume together in encrypted storage. Losing or replacing them requires users to reconnect. Delete individual users' references through your operator process. Deleting the whole volume disconnects everyone. See [disconnect](privacy.md#disconnect).
 
-All health calls use the authenticated request's upstream token and the fixed Google `users/me` path. The service stores no health history, health snapshots or shared health-result cache. Provider records are fetched on demand and returned to the selected assistant. The assistant's own processing/retention rules remain separate from this service.
+## Public operation
 
-Fernet encrypts client registrations, OAuth transactions, codes, token mappings and upstream credentials before they enter the persistent disk store. The private directory is mode `0700`. Searchable disk-cache metadata, traffic metadata and backups still require normal host protection. `.env` is private and excluded from Git and Docker context. Both keys and the OAuth volume must survive restarts.
+Before accepting other users:
 
-MCP access expiry follows Google's access-token lifetime by default. MCP refresh references have a fallback maximum of 30 days; upstream revocation or expiry remains authoritative. Google testing-mode refresh tokens may expire sooner. Refresh tokens rotate at the MCP layer; renewed Google credentials stay private.
+- Publish your operator policy and consent disclosure.
+- Provide a per-user deletion process and define backup retention.
+- Add rate limits and abuse protection to authorization and registration endpoints.
+- Complete Google's OAuth verification and any required security assessment.
 
-Disconnect the connector in the assistant and revoke the application's access in the Google account's third-party connections to invalidate Google authorization. The current service does not advertise an RFC 7009 revocation endpoint or automatically revoke the Google grant when an assistant removes a connector. Stored references expire according to their TTL; encrypted disk-cache cleanup and backup deletion are operator-managed. Removing the entire MCP OAuth volume invalidates all connector grants, so it is not a per-user disconnect procedure.
-
-Keep OAuth storage and both keys in restricted, encrypted backups. Rotating keys or removing the volume requires users to reconnect. Place rate limits and abuse protection in front of public authorization/registration endpoints before public operation. Scale this disk-backed release as one process on one host; multi-process or multi-host OAuth concurrency requires shared transactional storage and a separate validation pass.
+Use one application process on one host. Multiple workers or hosts need shared transactional OAuth storage and concurrency testing. Passing local tests does not establish Google approval or a working connection with an external assistant.
