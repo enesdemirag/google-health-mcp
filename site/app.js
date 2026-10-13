@@ -2,12 +2,12 @@
 
 const $ = (id) => document.getElementById(id);
 let mode = "hosted";
-let config = { hostedMcpUrl: null, hostedStatus: "pending", hostedMessage: "Hosted access is being prepared. Self-hosting is available now." };
+let config = { hostedMcpUrl: null, hostedStatus: "pending", hostedMessage: "Checking hosted availability." };
 const help = {
-  codex: "Add the remote server with the Codex CLI, then use codex mcp login to authorize in your browser.",
-  "claude-code": "Add an HTTP server in Claude Code, then use /mcp to finish browser authorization.",
-  cursor: "Add the remote URL in Cursor's MCP settings. Use its connection flow to finish Google authorization.",
-  grok: "Add the URL in your assistant's custom MCP connector settings. A prompt can guide you; it cannot replace the connector UI."
+  codex: "Use codex mcp login to finish Google sign-in in your browser.",
+  "claude-code": "Use /mcp in Claude Code to finish Google sign-in.",
+  cursor: "Finish Google sign-in in Cursor's MCP settings.",
+  others: "Add the URL in your assistant's MCP settings and finish Google sign-in."
 };
 
 function validEndpoint(value) {
@@ -20,13 +20,14 @@ function validEndpoint(value) {
 }
 
 function setupPrompt(client, endpoint) {
+  const quotedEndpoint = "'" + endpoint.replace(/'/g, "'\\''") + "'";
   const instructions = {
-    codex: `Use the Codex CLI to add an HTTP MCP server named google-health at ${endpoint} (codex mcp add google-health --url '${endpoint}'), then run codex mcp login google-health.`,
-    "claude-code": `Use claude mcp add --transport http --scope user google-health '${endpoint}'. Then guide me to /mcp in Claude Code to authenticate.`,
-    cursor: `Add a remote MCP server named google-health in my personal Cursor MCP settings with this configuration, merging with existing entries: ${JSON.stringify({ mcpServers: { "google-health": { url: endpoint } } }, null, 2)}. Guide me through the MCP connection UI.`,
-    grok: `Guide me to add ${endpoint} as a custom remote HTTP MCP connector in this assistant's settings. If this assistant cannot configure connectors from chat, give me the manual steps instead of claiming it is connected.`
+    codex: `Run in my local Codex environment:\ncodex mcp add google-health --url ${quotedEndpoint}\ncodex mcp login google-health`,
+    "claude-code": `Run in my local Claude Code environment:\nclaude mcp add --transport http --scope user google-health ${quotedEndpoint}\nThen use /mcp to authenticate.`,
+    cursor: `Merge this entry into my personal ~/.cursor/mcp.json:\n${JSON.stringify({ mcpServers: { "google-health": { url: endpoint } } }, null, 2)}\nAuthenticate in Cursor's MCP settings.`,
+    others: `Add ${endpoint} as a custom MCP connection with Streamable HTTP and OAuth. If you cannot configure the connector here, give me the manual steps.`
   };
-  return `Connect my assistant to the unofficial, read-only Google Health MCP server at ${endpoint}.\n\n${instructions[client]}\n\nPreserve my other MCP connections. If google-health already exists, verify its URL before changing it. Use per-user OAuth and let me finish consent and Google sign-in in my browser. Never ask for my Google password, tokens, or Cloud credentials.\n\nAfter authorization, call get_connection_status and list_health_metrics to verify my Health account link and granted permissions. Report missing permissions or errors accurately. Do not retrieve health measurements until I ask.`;
+  return `Connect my Google Health account to HealPot at ${endpoint}.\n\nPreserve my other MCP connections. If google-health already exists, check its URL before changing it.\n\n${instructions[client]}\n\nUse my own OAuth connection. Let me finish Google consent in my browser. Never ask for passwords, tokens or Cloud credentials.\n\nCall get_connection_status and list_health_metrics. Report my connection status and permissions. Read measurements only when I ask.`;
 }
 
 function refresh() {
@@ -34,30 +35,29 @@ function refresh() {
   $("self-mode").setAttribute("aria-pressed", String(mode === "self"));
   $("hosted-info").hidden = mode !== "hosted";
   $("self-info").hidden = mode !== "self";
-  $("availability").textContent = config.hostedMessage;
-  $("hosted-endpoint").textContent = config.hostedMcpUrl || "Endpoint will be published when ready.";
+  $("url-hint").hidden = mode !== "self";
+  $("availability").textContent = mode === "hosted" ? config.hostedMessage : "";
+  $("connection-status").textContent = mode === "self" ? "Your server" : { pending: "Preparing", pilot: "Hosted pilot", available: "Hosted server" }[config.hostedStatus];
+  $("hosted-endpoint").textContent = config.hostedMcpUrl || "Loading endpoint...";
   const endpoint = validEndpoint(mode === "hosted" ? config.hostedMcpUrl : $("server-url").value.trim());
   const usable = Boolean(endpoint) && (mode === "self" || ["available", "pilot"].includes(config.hostedStatus));
   $("copy-prompt").disabled = !usable;
   $("copy-url").disabled = !usable;
   $("client-instructions").textContent = help[$("client").value];
-  $("prompt-preview").value = usable ? setupPrompt($("client").value, endpoint) : mode === "hosted" ? "The hosted connection is being prepared. Choose your own server to generate a setup prompt for an existing endpoint." : "Enter a valid HTTPS endpoint ending in /mcp. Local HTTP is allowed only for loopback addresses.";
+  $("prompt-preview").value = usable ? setupPrompt($("client").value, endpoint) : mode === "hosted" ? "Hosted access is unavailable. Choose Your server to use your own endpoint." : "Enter an HTTPS URL ending in /mcp. Local clients can use loopback HTTP.";
   $("copy-feedback").textContent = "";
 }
 
-async function copyText(text, button) {
-  const label = button.textContent;
+async function copyText(text) {
   try {
     await navigator.clipboard.writeText(text);
-    $("copy-feedback").textContent = "Copied to clipboard.";
-    button.textContent = "Copied ✓";
-    setTimeout(() => { button.textContent = label; }, 1800);
+    $("copy-feedback").textContent = "Copied.";
   } catch {
     $("prompt-preview").value = text;
     document.querySelector(".prompt-details").open = true;
     $("prompt-preview").focus();
     $("prompt-preview").select();
-    $("copy-feedback").textContent = "Clipboard access is unavailable. The text is selected below; copy it manually.";
+    $("copy-feedback").textContent = "Copy the selected text below.";
   }
 }
 
@@ -65,13 +65,13 @@ $("hosted-mode").addEventListener("click", () => { mode = "hosted"; refresh(); }
 $("self-mode").addEventListener("click", () => { mode = "self"; refresh(); });
 $("client").addEventListener("change", refresh);
 $("server-url").addEventListener("input", refresh);
-$("copy-prompt").addEventListener("click", () => copyText($("prompt-preview").value, $("copy-prompt")));
-$("copy-url").addEventListener("click", () => copyText(validEndpoint(mode === "hosted" ? config.hostedMcpUrl : $("server-url").value), $("copy-url")));
+$("copy-prompt").addEventListener("click", () => copyText($("prompt-preview").value));
+$("copy-url").addEventListener("click", () => copyText(validEndpoint(mode === "hosted" ? config.hostedMcpUrl : $("server-url").value)));
 const examples = {
-  sleep: "Use my connected Google Health MCP to review last night's recorded sleep against the preceding seven days. Confirm my time zone, preserve missing data and units, and distinguish personal baseline changes from clinical reference ranges.",
-  activity: "Use my connected Google Health MCP to review today's activity against the goals I've given you. Confirm my time zone, compare recorded values with my recent baseline, identify missing or delayed data, and avoid clinical classifications without appropriate sources."
+  sleep: "Use my Google Health connection to compare last night's sleep with the preceding seven days. Confirm my time zone and show missing data. Personal baselines are not clinical reference ranges.",
+  activity: "Use my Google Health connection to review today's activity against my goals. Confirm my time zone, keep units and show missing or delayed readings."
 };
-document.querySelectorAll("[data-example]").forEach((button) => button.addEventListener("click", () => copyText(examples[button.dataset.example], button)));
+document.querySelectorAll("[data-example]").forEach((button) => button.addEventListener("click", () => copyText(examples[button.dataset.example])));
 refresh();
 fetch("config.json", { cache: "no-cache" }).then((response) => {
   if (!response.ok) throw new Error("Configuration unavailable");
@@ -80,4 +80,4 @@ fetch("config.json", { cache: "no-cache" }).then((response) => {
   if (typeof data.hostedMessage !== "string" || !["pending", "pilot", "available"].includes(data.hostedStatus)) throw new Error("Invalid public configuration");
   config = data;
   refresh();
-}).catch(() => { refresh(); });
+}).catch(() => { config.hostedMessage = "Could not check hosted availability. Use your own server or reload."; refresh(); });

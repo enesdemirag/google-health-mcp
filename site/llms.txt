@@ -35,7 +35,7 @@ For Cursor, merge this entry into `~/.cursor/mcp.json`. Preserve other entries, 
 }
 ```
 
-For Grok, open https://grok.com/connectors, choose New Connector, then Custom. Enter the hosted MCP endpoint and authenticate. For other assistants, use their custom remote MCP connector with Streamable HTTP and OAuth support. If you cannot edit the client's configuration, give these manual steps. A chat prompt alone does not establish a connection.
+For other assistants, add the hosted endpoint in their custom MCP connector settings. The client must support Streamable HTTP and OAuth. If you cannot edit its configuration, give the user manual steps. A chat prompt alone does not establish a connection.
 
 Let the user complete consent and Google sign-in in the browser. Never ask for passwords, Google tokens or Cloud credentials. Each person authorizes their own account. An unauthenticated MCP request can return HTTP 401; use the client's OAuth flow.
 
@@ -60,4 +60,3 @@ Date ranges include `start_date` and exclude `end_date`, with a maximum of 90 da
 - [Codex MCP](https://learn.chatgpt.com/docs/extend/mcp?surface=cli): Official Codex setup.
 - [Claude Code MCP](https://code.claude.com/docs/en/mcp): Official Claude Code setup.
 - [Cursor MCP](https://cursor.com/docs/mcp): Official Cursor configuration.
-- [Grok connectors](https://docs.x.ai/grok/connectors): Official custom connector instructions.
