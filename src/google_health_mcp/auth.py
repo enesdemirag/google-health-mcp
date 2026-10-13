@@ -1,5 +1,3 @@
-from html import escape
-
 from cryptography.fernet import Fernet
 from fastmcp.server.auth.providers.google import GoogleProvider
 from key_value.aio.stores.disk import DiskStore
@@ -8,6 +6,7 @@ from starlette.requests import Request
 from starlette.responses import HTMLResponse, RedirectResponse
 
 from google_health_mcp.config import HEALTH_SCOPES, Settings
+from google_health_mcp.consent import simplify_consent_page
 
 
 class HealthGoogleProvider(GoogleProvider):
@@ -25,26 +24,7 @@ class HealthGoogleProvider(GoogleProvider):
             # Keep the browser's Origin on the form POST without sending the
             # consent transaction URL to Google or other external sites.
             response.headers["Referrer-Policy"] = "same-origin"
-            policy = (
-                f'<p><a href="{escape(self.privacy_policy_url, quote=True)}" '
-                'target="_blank" rel="noopener noreferrer">Operator privacy policy and disconnect</a></p>'
-                if self.privacy_policy_url
-                else "<p>Ask this server's operator for their privacy and data-deletion policy.</p>"
-            )
-            notice = (
-                '<section class="info-box" aria-label="Google Health data sharing">'
-                "<h2>Google Health data sharing</h2>"
-                "<p>This connection requests read access to activity and fitness, sleep, health measurements "
-                "and nutrition. You choose which categories to allow on Google's consent screen.</p>"
-                "<p>When you ask a health or fitness question, this server sends requested health records "
-                "to the assistant shown above. That assistant or its AI provider receives those results "
-                "and follows its own data policies.</p>"
-                "<p>Authorization credentials are stored encrypted. Health measurements are processed "
-                "in memory and are not persisted by this server. Allow Access confirms this data sharing "
-                "before you continue to Google; Deny cancels the connection.</p>"
-                f"{policy}</section>"
-            ).encode()
-            response.body = response.body.replace(marker, notice + marker, 1)
+            response.body = simplify_consent_page(response.body.decode(), self.privacy_policy_url).encode()
             response.headers["content-length"] = str(len(response.body))
         return response
 

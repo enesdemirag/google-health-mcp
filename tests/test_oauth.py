@@ -89,13 +89,18 @@ async def test_consent_requires_csrf_and_same_browser(oauth):
     await oauth.callback(flow)
 
 
-async def test_health_disclosure_precedes_consent_and_preserves_csrf(oauth):
+async def test_simple_consent_preserves_data_sharing_notice_and_oauth(oauth):
     flow = await oauth.start()
     page = await oauth.client.get("/consent", params={"txn_id": flow["transaction"]})
     assert page.status_code == 200
-    assert page.text.index("Google Health data sharing") < page.text.index('<form id="consentForm"')
-    assert "activity and fitness, sleep, health measurements and nutrition" in page.text
-    assert "assistant or its AI provider receives those results" in page.text
+    assert page.text.index("can read your Google Health data") < page.text.index('<form id="consentForm"')
+    assert "share it with its AI provider" in page.text
+    assert "<strong>Test assistant</strong>" in page.text
+    assert 'value="approve">Allow</button>' in page.text
+    assert 'value="deny">Deny</button>' in page.text
+    assert "Application Access Request" not in page.text
+    assert "Advanced Details" not in page.text
+    assert "Credentials will be sent to" not in page.text
     assert "csrf_token" in page.text
     assert int(page.headers["content-length"]) == len(page.content)
     assert 'http-equiv="Content-Security-Policy"' in page.text
